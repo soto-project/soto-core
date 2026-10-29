@@ -33,7 +33,7 @@ struct PayloadTests {
             private enum CodingKeys: CodingKey {}
         }
 
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let body = try await request.body.collect(upTo: .max)
             #expect(String(buffer: body) == expectedResult)
             return .init(response: .init(status: .ok))
@@ -80,7 +80,7 @@ struct PayloadTests {
                 self.payload = try container.decode(AWSHTTPBody.self)
             }
         }
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let body = ByteBuffer(string: "testResponsePayload")
             return .init(response: .init(status: .ok), body: .init(buffer: body))
         }

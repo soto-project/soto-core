@@ -45,7 +45,7 @@ final class SSOCredentialProviderTests: Sendable {
     @Test("Parse modern SSO config with sso-session reference")
     func parseModernSSOConfig() async throws {
         try await withSSOEnvironment(cacheKey: "my-sso") { env in
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 #expect(request.headers[.xAmzSSOBearerToken] == "test-access-token")
                 let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("role_name=TestRole"))
@@ -76,7 +76,7 @@ final class SSOCredentialProviderTests: Sendable {
     func parseLegacySSOConfig() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl, accessToken: "legacy-access-token") { env in
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 #expect(request.headers[.xAmzSSOBearerToken] == "legacy-access-token")
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACY", secretAccessKey: "legacysecret", sessionToken: "legacysession")
             }
@@ -107,7 +107,7 @@ final class SSOCredentialProviderTests: Sendable {
             """
 
         try await withSSOEnvironment(cacheKey: "my-sso", accessToken: "config-test-token", configContent: configContent) { env in
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("portal.sso.us-west-2.amazonaws.com"))
                 #expect(urlString.contains("role_name=DevRole"))
@@ -137,7 +137,7 @@ final class SSOCredentialProviderTests: Sendable {
             cacheKey: "https://legacy.awsapps.com/start",
             configContent: configContent
         ) { env in
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("portal.sso.eu-central-1.amazonaws.com"))
                 #expect(urlString.contains("role_name=LegacyRole"))
@@ -165,7 +165,7 @@ final class SSOCredentialProviderTests: Sendable {
             cacheKey: "https://default.awsapps.com/start",
             configContent: configContent
         ) { env in
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("role_name=DefaultRole"))
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIADEFAULT")
@@ -184,7 +184,7 @@ final class SSOCredentialProviderTests: Sendable {
             let provider = SSOCredentialProvider(
                 profileName: "test",
                 configPath: tempDirectory.appendingPathComponent("nonexistent").path,
-                httpClient: MockAWSHTTPClient()
+                httpClient: MockHTTPClient()
             )
 
             await #expect {
@@ -206,7 +206,7 @@ final class SSOCredentialProviderTests: Sendable {
             sso_role_name = TestRole
             """
         ) { configPath in
-            let provider = SSOCredentialProvider(profileName: "nonexistent", configPath: configPath, httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(profileName: "nonexistent", configPath: configPath, httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -226,7 +226,7 @@ final class SSOCredentialProviderTests: Sendable {
             sso_role_name = TestRole
             """
         ) { configPath in
-            let provider = SSOCredentialProvider(profileName: "broken", configPath: configPath, httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(profileName: "broken", configPath: configPath, httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -250,7 +250,7 @@ final class SSOCredentialProviderTests: Sendable {
             sso_region = us-east-1
             """
         ) { configPath in
-            let provider = SSOCredentialProvider(profileName: "incomplete", configPath: configPath, httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(profileName: "incomplete", configPath: configPath, httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -271,7 +271,7 @@ final class SSOCredentialProviderTests: Sendable {
             sso_account_id = 123456789012
             """
         ) { configPath in
-            let provider = SSOCredentialProvider(profileName: "partial", configPath: configPath, httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(profileName: "partial", configPath: configPath, httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -287,7 +287,7 @@ final class SSOCredentialProviderTests: Sendable {
     func getRoleCredentialsHTTPError() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in .init(response: .init(status: .forbidden)) }
+            let mockHTTPClient = MockHTTPClient { _ in .init(response: .init(status: .forbidden)) }
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
 
             await #expect {
@@ -303,7 +303,7 @@ final class SSOCredentialProviderTests: Sendable {
     func invalidGetRoleCredentialsResponse() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in .init(response: .init(status: .ok), body: .init(string: "invalid json")) }
+            let mockHTTPClient = MockHTTPClient { _ in .init(response: .init(status: .ok), body: .init(string: "invalid json")) }
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
 
             await #expect(throws: DecodingError.self) {
@@ -321,7 +321,7 @@ final class SSOCredentialProviderTests: Sendable {
             tokenJSON: makeModernTokenJSON(expiresIn: 2 * 3600)  // well outside refresh window
         ) { env in
             let requestCounter = RequestCounter()
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 let urlString = try #require(request.request.url?.absoluteString)
                 await requestCounter.record(urlString)
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIAVALID")

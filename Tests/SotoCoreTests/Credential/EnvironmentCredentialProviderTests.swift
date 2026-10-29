@@ -142,7 +142,7 @@ struct EnvironmentCredentialProviderTests {
         let filenameURL = URL(fileURLWithPath: filename)
         #expect(throws: Never.self) { try Data(credentialsFile.utf8).write(to: filenameURL) }
 
-        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        let httpClient = MockHTTPClient { _ in fatalError() }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
 
         defer {
@@ -180,7 +180,7 @@ struct EnvironmentCredentialProviderTests {
         #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
         defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
 
-        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        let httpClient = MockHTTPClient { _ in fatalError() }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))

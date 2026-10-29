@@ -33,7 +33,7 @@ class LoggingTests: XCTestCase {
 
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClient: MockAWSHTTPClient(),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
         try await withClient(client) {
@@ -58,7 +58,7 @@ class LoggingTests: XCTestCase {
         logger.logLevel = .trace
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClient: MockAWSHTTPClient(),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
         let config = createServiceConfig(
@@ -91,8 +91,8 @@ class LoggingTests: XCTestCase {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let mockHTTPClient = MockAWSHTTPClient { request in
-            MockAWSHTTPClient.AWSError(status: .unauthorized, code: "AccessDenied").response(for: .json(version: "1.1"))
+        let mockHTTPClient = MockHTTPClient { request in
+            MockHTTPClient.AWSError(status: .unauthorized, code: "AccessDenied").response(for: .json(version: "1.1"))
         }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
@@ -118,7 +118,7 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let count = Atomic(0)
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let (value, _) = count.add(1, ordering: .relaxed)
             if value == 0 {
                 throw TestError()
@@ -170,7 +170,7 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(requestLogLevel: .trace),
-            httpClient: MockAWSHTTPClient(),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
         let config = createServiceConfig(
@@ -199,7 +199,7 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let traceLogger = logger
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let output = Output(s: "TestOutputString")
             let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
             return .init(response: .init(status: .ok), body: .init(buffer: byteBuffer))

@@ -12,15 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
 import HTTPTypes
 import Logging
 import NIOCore
 import SotoCore
 import SotoTestUtils
-import XCTest
+import Synchronization
+import Testing
 
-class WaiterTests: XCTestCase {
+struct WaiterTests {
     struct TestService: AWSService {
         var client: AWSClient
         var config: AWSServiceConfig
@@ -100,49 +100,42 @@ class WaiterTests: XCTestCase {
         }
     }
 
-    var awsServer: AWSTestServer!
-    var config: AWSServiceConfig!
-    var client: AWSClient!
-
-    override func setUp() {
-        self.awsServer = AWSTestServer(serviceProtocol: .json)
-        self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
-        self.client = createAWSClient(credentialProvider: .empty, middlewares: AWSLoggingMiddleware())
+    @Test func testJMESPathWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            return TestService.ArrayOutput(array: [.init(newCount >= 3), .init(newCount >= 2), .init(newCount >= 1)])
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true]))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: service.arrayOperation
+            )
+            let input = TestService.Input()
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 
-    override func tearDown() {
-        XCTAssertNoThrow(try self.client.syncShutdown())
-        XCTAssertNoThrow(try self.awsServer.stop())
-    }
-
-    func testJMESPathWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true]))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: service.arrayOperation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-                i += 1
-                return .result(TestService.ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-            }
-        )
-
-        try await responseTask
-    }
-
-    func testJMESPathWaiterWithString() async throws {
+    @Test func testJMESPathWaiterWithString() async throws {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
-        let service = TestService(client: self.client, config: self.config)
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 2 {
+                return StringOutput(s: "no")
+            } else {
+                return StringOutput(s: "yes")
+            }
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> StringOutput {
             try await service.client.execute(
                 operation: "Basic",
@@ -153,32 +146,20 @@ class WaiterTests: XCTestCase {
                 logger: logger
             )
         }
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes"))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: operation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<StringOutput> in
-                i += 1
-                if i < 2 {
-                    return .result(.init(s: "no"), continueProcessing: true)
-                } else {
-                    return .result(.init(s: "yes"), continueProcessing: false)
-                }
-            }
-        )
-
-        try await responseTask
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes"))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: operation
+            )
+            let input = TestService.Input()
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 
-    func testJMESPathWaiterWithRawRepresentable() async throws {
+    @Test func testJMESPathWaiterWithRawRepresentable() async throws {
         struct YesNo: RawRepresentable, Sendable, Codable {
             let rawValue: Int
 
@@ -188,7 +169,17 @@ class WaiterTests: XCTestCase {
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
-        let service = TestService(client: self.client, config: self.config)
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 2 {
+                return EnumOutput(e: .no)
+            } else {
+                return EnumOutput(e: .yes)
+            }
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> EnumOutput {
             try await service.client.execute(
                 operation: "Basic",
@@ -199,210 +190,185 @@ class WaiterTests: XCTestCase {
                 logger: logger
             )
         }
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: 1))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: operation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<EnumOutput> in
-                i += 1
-                if i < 2 {
-                    return .result(.init(e: .no), continueProcessing: true)
-                } else {
-                    return .result(.init(e: .yes), continueProcessing: false)
-                }
-            }
-        )
-
-        try await responseTask
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESPathMatcher("e", expected: 1))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: operation
+            )
+            let input = TestService.Input()
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 
-    func testJMESAnyPathWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: service.arrayOperation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-                i += 1
-                if i < 2 {
-                    return .result(TestService.ArrayOutput(array: [false, false, false]), continueProcessing: true)
-                } else {
-                    return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: false)
-                }
+    @Test func testJMESAnyPathWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 2 {
+                return TestService.ArrayOutput(array: [false, false, false])
+            } else {
+                return TestService.ArrayOutput(array: [false, true, false])
             }
-        )
-
-        try await responseTask
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: service.arrayOperation
+            )
+            let input = TestService.Input()
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 
-    func testJMESAllPathWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: service.arrayOperation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-                i += 1
-                if i < 2 {
-                    return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: true)
-                } else {
-                    return .result(TestService.ArrayOutput(array: [true, true, true]), continueProcessing: false)
-                }
+    @Test func testJMESAllPathWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 2 {
+                return TestService.ArrayOutput(array: [false, true, false])
+            } else {
+                return TestService.ArrayOutput(array: [true, true, true])
             }
-        )
-
-        try await responseTask
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: service.arrayOperation
+            )
+            let input = TestService.Input()
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 
-    func testJMESPathPropertyValueWaiter() async throws {
+    @Test func testJMESPathPropertyValueWaiter() async throws {
         struct ArrayOutput: AWSDecodableShape & Encodable {
             @CustomCoding<StandardArrayCoder<Bool>> var array: [Bool]
         }
         struct Input: AWSEncodableShape & Decodable {
             let test: String
         }
-        let awsServer = AWSTestServer(serviceProtocol: .xml)
-        defer { XCTAssertNoThrow(try awsServer.stop()) }
-
-        let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
-        let service = TestService(client: self.client, config: config)
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient(serviceProtocol: .restxml) { (input: Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            return ArrayOutput(array: [.init(newCount >= 3), .init(newCount >= 2), .init(newCount >= 1)])
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let serviceConfig = createServiceConfig(serviceProtocol: .restxml)
+        let service = TestService(client: client, config: serviceConfig)
 
         @Sendable func arrayOperation(input: Input, logger: Logger) async throws -> ArrayOutput {
-            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .post, serviceConfig: config, input: input, logger: logger)
+            try await service.client.execute(
+                operation: "Basic",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: serviceConfig,
+                input: input,
+                logger: logger
+            )
         }
 
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true]))
-            ],
-            minDelayTime: .milliseconds(2),
-            command: arrayOperation
-        )
-        let input = Input(test: "Input")
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
-                i += 1
-                return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-            }
-        )
-
-        try await responseTask
-    }
-
-    func testTimeoutWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3))
-            ],
-            minDelayTime: .milliseconds(200),
-            maxDelayTime: .milliseconds(400),
-            command: service.operation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(
-            input,
-            waiter: waiter,
-            maxWaitTime: .milliseconds(400),
-            logger: TestEnvironment.logger
-        )
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-                i += 1
-                return .result(TestService.Output(i: i), continueProcessing: i < 2)
-            }
-        )
-
-        do {
-            try await responseTask
-            XCTFail("Should not get here")
-        } catch {
-            XCTAssertEqual(error as? AWSClient.ClientError, .waiterTimeout)
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true]))
+                ],
+                minDelayTime: .milliseconds(2),
+                command: arrayOperation
+            )
+            let input = Input(test: "Input")
+            try await service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
         }
     }
 
-    func testErrorWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
-                .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
-            ],
-            minDelayTime: .milliseconds(2),
-            command: service.operation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-                i += 1
-                if i < 3 {
-                    return .error(.accessDenied, continueProcessing: true)
-                } else {
-                    return .result(TestService.Output(i: i), continueProcessing: false)
-                }
+    @Test func testTimeoutWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            return TestService.Output(i: newCount)
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3))
+                ],
+                minDelayTime: .milliseconds(200),
+                maxDelayTime: .milliseconds(400),
+                command: service.operation
+            )
+            let error = await #expect(throws: AWSClient.ClientError.self) {
+                try await service.client.waitUntil(
+                    TestService.Input(),
+                    waiter: waiter,
+                    maxWaitTime: .milliseconds(400),
+                    logger: TestEnvironment.logger
+                )
             }
-        )
-
-        try await responseTask
+            #expect(error == .waiterTimeout)
+        }
     }
 
-    func testErrorStatusWaiter() async throws {
-        let service = TestService(client: self.client, config: self.config)
-        let waiter = AWSClient.Waiter(
-            acceptors: [
-                .init(state: .retry, matcher: AWSErrorStatusMatcher(404)),
-                .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
-            ],
-            minDelayTime: .milliseconds(2),
-            command: service.operation
-        )
-        let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-
-        var i = 0
-        XCTAssertNoThrow(
-            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-                i += 1
-                if i < 3 {
-                    return .error(.notFound, continueProcessing: true)
-                } else {
-                    return .result(TestService.Output(i: i), continueProcessing: false)
-                }
+    @Test func testErrorWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 3 {
+                throw MockHTTPClient.AWSError(status: .unauthorized, code: "AccessDenied")
+            } else {
+                return TestService.Output(i: newCount)
             }
-        )
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
+                    .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
+                ],
+                minDelayTime: .milliseconds(2),
+                command: service.operation
+            )
+            try await service.client.waitUntil(TestService.Input(), waiter: waiter, logger: TestEnvironment.logger)
+        }
+    }
 
-        try await responseTask
+    @Test func testErrorStatusWaiter() async throws {
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { (input: TestService.Input) in
+            let newCount = count.add(1, ordering: .relaxed).newValue
+            if newCount < 3 {
+                throw MockHTTPClient.AWSError(status: .notFound)
+            } else {
+                return TestService.Output(i: newCount)
+            }
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: mockHTTPClient)
+        let service = TestService(client: client, config: createServiceConfig())
+        try await withClient(client) {
+            let waiter = AWSClient.Waiter(
+                acceptors: [
+                    .init(state: .retry, matcher: AWSErrorStatusMatcher(404)),
+                    .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
+                ],
+                minDelayTime: .milliseconds(2),
+                command: service.operation
+            )
+            try await service.client.waitUntil(.init(), waiter: waiter, logger: TestEnvironment.logger)
+        }
     }
 }

@@ -82,8 +82,8 @@ package struct MockHTTPClient: AWSHTTPClient {
     }
 
     package init<Input: Decodable & Sendable, Output: Encodable & Sendable>(
-        shapeHandler: @escaping (@Sendable (Input) async throws -> Output),
-        serviceProtocol: ServiceProtocol = .restjson
+        serviceProtocol: ServiceProtocol = .restjson,
+        shapeHandler: @escaping (@Sendable (Input) async throws -> Output)
     ) {
         self.requestHandler = { request in
             let inputData = try await request.body.collect(upTo: .max)
@@ -135,7 +135,7 @@ package struct MockHTTPClient: AWSHTTPClient {
         } catch {
             response = .init(
                 response: .init(status: .internalServerError),
-                body: .init(string: "{\"__type\":\"Internal Failure\", \"message\": \"\(error)\"}")
+                body: .init(string: "{\"__type\":\"InternalFailure\", \"message\": \"\(error)\"}")
             )
         }
         var responseHead = response.response

@@ -12,55 +12,51 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
+import Foundation
+import HTTPTypes
 import NIOCore
 import NIOHTTP1
 import NIOPosix
 import SotoTestUtils
 import SotoXML
-import XCTest
+import Testing
 import _NIOFileSystem
 
 @testable import SotoCore
 
-class STSAssumeRoleTests: XCTestCase {
-    func testInternalSTSAssumeRoleProvider() async throws {
+@Suite(.serialized)
+struct STSAssumeRoleTests {
+    @Test func testInternalSTSAssumeRoleProvider() async throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
             expiration: Date(timeIntervalSinceNow: 1_000_000),
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
-        let testServer = AWSTestServer(serviceProtocol: .xml)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
+        let mockHTTPClient = MockHTTPClient { _ in
+            let output = STSAssumeRoleResponse(credentials: credentials)
+            let xml = try XMLEncoder().encode(output)
+            return AWSHTTPResponse(response: .init(status: .ok), body: .init(string: xml?.xmlString ?? ""))
+        }
         let client = AWSClient(
             credentialProvider: .internalSTSAssumeRole(
                 roleArn: "arn:aws:iam::000000000000:role/test-sts-assume-role",
                 roleSessionName: "testInternalSTSAssumeRoleProvider",
                 credentialProvider: .empty,
-                region: .useast1,
-                endpoint: testServer.address
+                region: .useast1
             ),
+            httpClient: mockHTTPClient,
             logger: TestEnvironment.logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertNoThrow(
-            try testServer.processRaw { _ in
-                let output = STSAssumeRoleResponse(credentials: credentials)
-                let xml = try XMLEncoder().encode(output)
-                let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return .result(response)
-            }
-        )
-        let credential = try await credentialTask
-        XCTAssertEqual(credential.accessKeyId, credentials.accessKeyId)
-        XCTAssertEqual(credential.secretAccessKey, credentials.secretAccessKey)
-        XCTAssertEqual(credential.sessionToken, credentials.sessionToken)
+        try await withClient(client) {
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.accessKeyId == credentials.accessKeyId)
+            #expect(credential.secretAccessKey == credentials.secretAccessKey)
+            #expect(credential.sessionToken == credentials.sessionToken)
+        }
     }
 
-    func testSTSAssumeRoleEnvironmentVariables() async throws {
+    @Test func testSTSAssumeRoleEnvironmentVariables() async throws {
         Environment.set("arn:aws:iam::000000000000:role/test-sts-role-arn-env-role", for: "AWS_ROLE_ARN")
         Environment.set("testSTSAssumeRoleEnvironmentVariables", for: "AWS_ROLE_SESSION_NAME")
         Environment.set("temp_webidentity_token", for: "AWS_WEB_IDENTITY_TOKEN_FILE")
@@ -75,40 +71,35 @@ class STSAssumeRoleTests: XCTestCase {
         _ = try await fileSystem.withFileHandle(forWritingAt: .init("temp_webidentity_token"), options: .newFile(replaceExisting: true)) { write in
             try await write.write(contentsOf: ByteBuffer(string: webIdentityToken), toAbsoluteOffset: 0)
         }
+        let mockHTTPClient = MockHTTPClient { request in
+            let body = try await request.body.collect(upTo: .max)
+            let tokens = String(buffer: body).split(separator: "&")
+            let webIdentityToken = try #require(tokens.first { $0.hasPrefix("WebIdentityToken=") })
+            let credentials = STSCredentials(
+                accessKeyId: "STSACCESSKEYID",
+                expiration: Date(timeIntervalSinceNow: 1_000_000),
+                secretAccessKey: "STSSECRETACCESSKEY",
+                sessionToken: String(webIdentityToken)
+            )
+            let output = STSAssumeRoleResponse(credentials: credentials)
+            let xml = try XMLEncoder().encode(output)
+            return AWSHTTPResponse(response: .init(status: .ok), body: .init(string: xml?.xmlString ?? ""))
+        }
+        let client = AWSClient(
+            credentialProvider: .environment(endpoint: "http://localhost:8080"),
+            httpClient: mockHTTPClient,
+            logger: TestEnvironment.logger
+        )
         try await withTeardown {
-            let testServer = AWSTestServer(serviceProtocol: .xml)
-            defer { XCTAssertNoThrow(try testServer.stop()) }
-            let client = AWSClient(
-                credentialProvider: .environment(endpoint: testServer.address),
-                logger: TestEnvironment.logger
-            )
-            defer { XCTAssertNoThrow(try client.syncShutdown()) }
-            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-            XCTAssertNoThrow(
-                try testServer.processRaw { request in
-                    let tokens = String(buffer: request.body).split(separator: "&")
-                    let webIdentityToken = try XCTUnwrap(tokens.first { $0.hasPrefix("WebIdentityToken=") })
-                    let credentials = STSCredentials(
-                        accessKeyId: "STSACCESSKEYID",
-                        expiration: Date(timeIntervalSinceNow: 1_000_000),
-                        secretAccessKey: "STSSECRETACCESSKEY",
-                        sessionToken: String(webIdentityToken)
-                    )
-                    let output = STSAssumeRoleResponse(credentials: credentials)
-                    let xml = try XMLEncoder().encode(output)
-                    let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
-                    let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                    return .result(response)
-                }
-            )
-            let credential = try await credentialTask
-            XCTAssertEqual(credential.sessionToken, "WebIdentityToken=TestThis")
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.sessionToken == "WebIdentityToken=TestThis")
         } teardown: {
             _ = try? await fileSystem.removeItem(at: .init("temp_webidentity_token"))
+            try? await client.shutdown()
         }
     }
 
-    func testSTSAssumeRoleEnvironmentVariablesNoFile() async throws {
+    @Test func testSTSAssumeRoleEnvironmentVariablesNoFile() async throws {
         Environment.set("arn:aws:iam::000000000000:role/test-sts-role-arn-env-role", for: "AWS_ROLE_ARN")
         Environment.set("testSTSAssumeRoleEnvironmentVariables", for: "AWS_ROLE_SESSION_NAME")
         Environment.set("/doesntexist", for: "AWS_WEB_IDENTITY_TOKEN_FILE")
@@ -119,17 +110,19 @@ class STSAssumeRoleTests: XCTestCase {
         }
         let client = AWSClient(
             credentialProvider: .environment(),
+            httpClient: MockHTTPClient(),
             logger: TestEnvironment.logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        do {
-            _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Get credential should fail as token id file does not exist")
-        } catch let error as CredentialProviderError where error == .tokenIdFileFailedToLoad {}
+        try await withClient(client) {
+            let error = await #expect(throws: CredentialProviderError.self) {
+                _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            }
+            #expect(error == .tokenIdFileFailedToLoad)
+        }
     }
 }
 
-// Extend STSAssumeRoleRequest so it can be used with the AWSTestServer
+// Extend STSAssumeRoleRequest so it can be used with the MockHTTPClient
 extension STSAssumeRoleRequest: Decodable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -144,7 +137,7 @@ extension STSAssumeRoleRequest: Decodable {
     }
 }
 
-// Extend STSAssumeRoleResponse so it can be used with the AWSTestServer
+// Extend STSAssumeRoleResponse so it can be used with the MockHTTPClient
 extension STSAssumeRoleResponse: Encodable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -156,7 +149,7 @@ extension STSAssumeRoleResponse: Encodable {
     }
 }
 
-// Extend STSAssumeRoleWithWebIdentityResponse so it can be used with the AWSTestServer
+// Extend STSAssumeRoleWithWebIdentityResponse so it can be used with the MockHTTPClient
 extension STSAssumeRoleWithWebIdentityResponse: Encodable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -168,7 +161,7 @@ extension STSAssumeRoleWithWebIdentityResponse: Encodable {
     }
 }
 
-// Extend STSCredentials so it can be used with the AWSTestServer
+// Extend STSCredentials so it can be used with the MockHTTPClient
 extension STSCredentials: Encodable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)

@@ -230,43 +230,35 @@ struct EnvironmentCredentialProviderTests {
     }
 
     @Test func testECSProvider() async throws {
-        Environment.unset(name: "AWS_ACCESS_KEY_ID")
-
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { #expect(throws: Never.self) { try testServer.stop() } }
         let path = "/" + UUID().uuidString
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let customECS: CredentialProviderFactory = .custom { context in
-            if let client = ECSMetaDataClient(httpClient: context.httpClient, host: testServer.address) {
+            if let client = ECSMetaDataClient(httpClient: context.httpClient) {
                 return RotatingCredentialProvider(context: context, provider: client)
             }
             // fallback
             return NullCredentialProvider()
         }
-        let provider: CredentialProviderFactory = .selector(.environment, customECS, .empty)
-        let client = createAWSClient(credentialProvider: provider)
+        let provider: CredentialProviderFactory = .selector(customECS, .empty)
+        let client = AWSClient(credentialProvider: provider, httpClient: MockHTTPClient.ecsMetadataServer(path: path))
         try await withClient(client) {
-            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
-            #expect(throws: Never.self) { try testServer.ecsMetadataServer(path: path) }
-
-            let credential = try await credentialTask
-            #expect(credential.accessKeyId == AWSTestServer.ECSMetaData.default.accessKeyId)
-            #expect(credential.secretAccessKey == AWSTestServer.ECSMetaData.default.secretAccessKey)
-            #expect(credential.sessionToken == AWSTestServer.ECSMetaData.default.token)
+            #expect(credential.accessKeyId == MockHTTPClient.ECSMetaData.default.accessKeyId)
+            #expect(credential.secretAccessKey == MockHTTPClient.ECSMetaData.default.secretAccessKey)
+            #expect(credential.sessionToken == MockHTTPClient.ECSMetaData.default.token)
             let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
             #expect(internalProvider is RotatingCredentialProvider)
         }
     }
 
     @Test func testECSProviderFail() async throws {
-        Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
 
         let provider: CredentialProviderFactory = .selector(.ecs)
-        let client = createAWSClient(credentialProvider: provider)
+        let client = AWSClient(credentialProvider: provider, httpClient: MockHTTPClient())
         try await withClient(client) {
             let error = await #expect(throws: CredentialProviderError.self) {
                 _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)

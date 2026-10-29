@@ -60,23 +60,18 @@ struct RuntimeSelectorCredentialProviderTests {
     }
 
     @Test func testEC2Provider() async throws {
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { #expect(throws: Never.self) { try testServer.stop() } }
         let customEC2: CredentialProviderFactory = .custom { context in
-            let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
+            let client = InstanceMetaDataClient(httpClient: context.httpClient)
             return RotatingCredentialProvider(context: context, provider: client)
         }
 
-        let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
+        let client = createAWSClient(credentialProvider: .selector(customEC2, .empty), httpClient: MockHTTPClient.ec2MetadataServer(version: .v2))
         try await withClient(client) {
-            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
-            #expect(throws: Never.self) { try testServer.ec2MetadataServer(version: .v2) }
-
-            let credential = try await credentialTask
-            #expect(credential.accessKeyId == AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
-            #expect(credential.secretAccessKey == AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
-            #expect(credential.sessionToken == AWSTestServer.EC2InstanceMetaData.default.token)
+            #expect(credential.accessKeyId == MockHTTPClient.EC2InstanceMetaData.default.accessKeyId)
+            #expect(credential.secretAccessKey == MockHTTPClient.EC2InstanceMetaData.default.secretAccessKey)
+            #expect(credential.sessionToken == MockHTTPClient.EC2InstanceMetaData.default.token)
             let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
             #expect(internalProvider is RotatingCredentialProvider)
         }

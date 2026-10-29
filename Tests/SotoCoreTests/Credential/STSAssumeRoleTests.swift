@@ -86,7 +86,14 @@ struct STSAssumeRoleTests {
             return AWSHTTPResponse(response: .init(status: .ok), body: .init(string: xml?.xmlString ?? ""))
         }
         let client = AWSClient(
-            credentialProvider: .environment(endpoint: "http://localhost:8080"),
+            credentialProvider: .custom { context -> any CredentialProvider in
+                STSAssumeRoleCredentialProvider.fromEnvironment(
+                    context: context,
+                    endpoint: "http://localhost:8080",
+                    retryPolicy: .noRetry,
+                    threadPool: .singleton
+                ) ?? NullCredentialProvider()
+            },
             httpClient: mockHTTPClient,
             logger: TestEnvironment.logger
         )
@@ -102,14 +109,21 @@ struct STSAssumeRoleTests {
     @Test func testSTSAssumeRoleEnvironmentVariablesNoFile() async throws {
         Environment.set("arn:aws:iam::000000000000:role/test-sts-role-arn-env-role", for: "AWS_ROLE_ARN")
         Environment.set("testSTSAssumeRoleEnvironmentVariables", for: "AWS_ROLE_SESSION_NAME")
-        Environment.set("/doesntexist", for: "AWS_WEB_IDENTITY_TOKEN_FILE")
+        Environment.set("/webtoken-doesntexist", for: "AWS_WEB_IDENTITY_TOKEN_FILE")
         defer {
             Environment.unset(name: "AWS_ROLE_ARN")
             Environment.unset(name: "AWS_ROLE_SESSION_NAME")
             Environment.unset(name: "AWS_WEB_IDENTITY_TOKEN_FILE")
         }
         let client = AWSClient(
-            credentialProvider: .environment(),
+            credentialProvider: .custom { context -> any CredentialProvider in
+                STSAssumeRoleCredentialProvider.fromEnvironment(
+                    context: context,
+                    endpoint: "http://localhost:8080",
+                    retryPolicy: .noRetry,
+                    threadPool: .singleton
+                ) ?? NullCredentialProvider()
+            },
             httpClient: MockHTTPClient(),
             logger: TestEnvironment.logger
         )

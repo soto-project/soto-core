@@ -80,7 +80,7 @@ final class LoginErrorHandlingTests {
 
         // Setup mock HTTP client
         // Mock server returns TOKEN_EXPIRED error
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"TOKEN_EXPIRED","message":"The refresh token has expired."}
                 """
@@ -142,7 +142,7 @@ final class LoginErrorHandlingTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"USER_CREDENTIALS_CHANGED","message":"User credentials have changed."}
                 """
@@ -202,7 +202,7 @@ final class LoginErrorHandlingTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"INSUFFICIENT_PERMISSIONS","message":"Insufficient permissions."}
                 """

@@ -34,7 +34,7 @@ struct ConfigFileCredentialProviderTests {
     // MARK: - Credential Provider
 
     func makeContext() -> CredentialProviderFactory.Context {
-        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        let httpClient = MockHTTPClient { _ in fatalError() }
         return .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
     }
 
@@ -151,7 +151,7 @@ struct ConfigFileCredentialProviderTests {
             }
         }
 
-        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        let httpClient = MockHTTPClient { _ in fatalError() }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
@@ -168,7 +168,7 @@ struct ConfigFileCredentialProviderTests {
         let configFilename = "config_\(#function)"
         let configFilenameURL = URL(fileURLWithPath: configFilename)
 
-        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        let httpClient = MockHTTPClient { _ in fatalError() }
 
         let factory = CredentialProviderFactory.configFile(
             credentialsFilePath: credentialsFilenameURL.path,
@@ -229,7 +229,7 @@ struct ConfigFileCredentialProviderTests {
         defer { try? FileManager.default.removeItem(atPath: configFilePath) }
 
         // Prepare mock HTTP client
-        let httpClient = MockAWSHTTPClient { request in
+        let httpClient = MockHTTPClient { request in
             let output = STSAssumeRoleResponse(credentials: stsCredentials)
             let xml = try XMLEncoder().encode(output)
             let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()

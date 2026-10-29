@@ -26,7 +26,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-package struct MockAWSHTTPClient: AWSHTTPClient {
+package struct MockHTTPClient: AWSHTTPClient {
     private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> AWSHTTPResponse
 
     package init(
@@ -37,40 +37,43 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
 
     package struct AWSError: Error {
         let status: HTTPResponse.Status
-        let code: String
+        let code: String?
         let message: String?
 
-        package init(status: HTTPResponse.Status, code: String, message: String? = nil) {
+        package init(status: HTTPResponse.Status, code: String? = nil, message: String? = nil) {
             self.status = status
             self.code = code
             self.message = message
         }
 
         package func response(for serviceProtocol: ServiceProtocol) -> AWSHTTPResponse {
-            switch serviceProtocol {
+            guard let code = self.code else {
+                return AWSHTTPResponse(response: .init(status: status))
+            }
+            return switch serviceProtocol {
             case .json:
                 if let message {
                     AWSHTTPResponse(
                         response: .init(status: status),
-                        body: .init(string: "{\"__type\":\"\(self.code)\", \"message\": \"\(message)\"}")
+                        body: .init(string: "{\"__type\":\"\(code)\", \"message\": \"\(message)\"}")
                     )
                 } else {
-                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(self.code)\"}"))
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(code)\"}"))
                 }
             case .restjson:
                 if let message {
-                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(self.code)\", \"message\": \"\(message)\"}"))
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\", \"message\": \"\(message)\"}"))
                 } else {
-                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(self.code)\"}"))
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\"}"))
                 }
             case .restxml:
                 if let message {
                     AWSHTTPResponse(
                         response: .init(status: status),
-                        body: .init(string: "<Error><Code>\(self.code)</Code><Message>\(message)</Message></Error>")
+                        body: .init(string: "<Error><Code>\(code)</Code><Message>\(message)</Message></Error>")
                     )
                 } else {
-                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "<Error><Code>\(self.code)</Code></Error>"))
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "<Error><Code>\(code)</Code></Error>"))
                 }
             default:
                 fatalError("Protocol is not supported")

@@ -34,26 +34,6 @@ import Foundation
 #endif
 
 class AWSClientTests {
-    struct HTTPBinResponse: AWSDecodableShape & Encodable {
-        public let method: String?
-        public let data: String?
-        public let headers: HTTPFields
-        public let url: String
-    }
-
-    @Sendable static func httpBin(_ request: AWSHTTPRequest) async throws -> AWSHTTPResponse {
-        // httpBin function response
-        let data = try await String(buffer: request.body.collect(upTo: .max))
-        let httpBinResponse = HTTPBinResponse(
-            method: request.method.rawValue,
-            data: data,
-            headers: request.request.headerFields,
-            url: request.request.path ?? "Unknown"
-        )
-        let responseBody = try JSONEncoder().encode(httpBinResponse)
-        return .init(response: .init(status: .ok, headerFields: [.contentType: "application/json"]), body: .init(bytes: responseBody))
-    }
-
     @Test func testGetCredential() async throws {
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "key", secretAccessKey: "secret"))
         try await withClient(client) {
@@ -67,16 +47,15 @@ class AWSClientTests {
         struct Input: AWSEncodableShape {
             let content: String
         }
-        let mockHTTPClient = MockAWSHTTPClient(requestHandler: Self.httpBin)
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClient: mockHTTPClient
+            httpClient: MockHTTPClient.httpBin
         )
         try await withClient(client) {
             let config = createServiceConfig(
                 serviceProtocol: .json(version: "1.1")
             )
-            let httpBinResponse: HTTPBinResponse = try await client.execute(
+            let httpBinResponse: MockHTTPClient.HTTPBinResponse = try await client.execute(
                 operation: "test",
                 path: "/",
                 httpMethod: .post,
@@ -96,17 +75,16 @@ class AWSClientTests {
         struct Input: AWSEncodableShape {
             let content: String
         }
-        let mockHTTPClient = MockAWSHTTPClient(requestHandler: Self.httpBin)
         let client = createAWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(signingAlgorithm: .sigV4a),
-            httpClient: mockHTTPClient
+            httpClient: MockHTTPClient.httpBin
         )
         try await withClient(client) {
             let config = createServiceConfig(
                 serviceProtocol: .json(version: "1.1")
             )
-            let httpBinResponse: HTTPBinResponse = try await client.execute(
+            let httpBinResponse: MockHTTPClient.HTTPBinResponse = try await client.execute(
                 operation: "test",
                 path: "/",
                 httpMethod: .post,
@@ -120,7 +98,7 @@ class AWSClientTests {
 
     @Test func testClientNoInputNoOutput() async throws {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        let client = createAWSClient(credentialProvider: .empty, middlewares: TestEnvironment.middlewares, httpClient: MockAWSHTTPClient())
+        let client = createAWSClient(credentialProvider: .empty, middlewares: TestEnvironment.middlewares, httpClient: MockHTTPClient())
         try await withClient(client) {
             let _: Void = try await client.execute(
                 operation: "test",
@@ -143,7 +121,7 @@ class AWSClientTests {
         }
 
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let receivedInput = try await JSONDecoder().decode(Input.self, from: request.body.collect(upTo: .max))
             #expect(receivedInput.e == .second)
             #expect(receivedInput.i == [1, 2, 4, 8])
@@ -169,7 +147,7 @@ class AWSClientTests {
             let i: Int64
         }
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let output = Output(s: "TestOutputString", i: 547)
             let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
             return .init(response: .init(status: .ok), body: .init(buffer: byteBuffer))
@@ -200,7 +178,7 @@ class AWSClientTests {
             let data: AWSBase64Data
         }
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let receivedInput = try await JSONDecoder().decode(Input.self, from: request.body.collect(upTo: .max))
             let output = Output(data: receivedInput.data)
             let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
@@ -235,7 +213,7 @@ class AWSClientTests {
         let data = createRandomBuffer(45, 9182, size: bufferSize)
         let byteBuffer = ByteBuffer(bytes: data)
 
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let bytes = try await request.body.collect(upTo: .max)
             #expect(bytes == byteBuffer)
             return .init(response: .init(status: .ok))
@@ -293,7 +271,7 @@ class AWSClientTests {
         let data = createRandomBuffer(45, 9182, size: bufferSize)
         let byteBuffer = ByteBuffer(bytes: data)
 
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let requestBody = try await request.body.collect(upTo: .max)
             #expect(requestBody == byteBuffer)
             return .init(response: .init(status: .ok))
@@ -316,9 +294,9 @@ class AWSClientTests {
 
     @Test func testServerError() async throws {
         let count = Atomic(0)
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             if count.add(1, ordering: .relaxed).newValue < 5 {
-                return MockAWSHTTPClient.AWSError(status: .internalServerError, code: "InternalFailure").response(for: .restjson)
+                return MockHTTPClient.AWSError(status: .internalServerError, code: "InternalFailure").response(for: .restjson)
             } else {
                 return .init(response: .init(status: .ok))
             }
@@ -344,9 +322,9 @@ class AWSClientTests {
             let s: String
         }
         let count = Atomic(0)
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             if count.add(1, ordering: .relaxed).newValue < 3 {
-                return MockAWSHTTPClient.AWSError(status: .notImplemented, code: "NotImplemented").response(for: .json(version: "1.1"))
+                return MockHTTPClient.AWSError(status: .notImplemented, code: "NotImplemented").response(for: .json(version: "1.1"))
             } else {
                 let output = Output(s: "TestOutputString")
                 let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
@@ -381,8 +359,8 @@ class AWSClientTests {
             }
         }
         let retryPolicy = TestRetryPolicy()
-        let mockHTTPClient = MockAWSHTTPClient { request in
-            MockAWSHTTPClient.AWSError(status: .serviceUnavailable, code: "ServiceUnavailable").response(for: .json(version: "1.1"))
+        let mockHTTPClient = MockHTTPClient { request in
+            MockHTTPClient.AWSError(status: .serviceUnavailable, code: "ServiceUnavailable").response(for: .json(version: "1.1"))
         }
         let client = createAWSClient(credentialProvider: .empty, retryPolicy: retryPolicy, httpClient: mockHTTPClient)
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
@@ -402,8 +380,8 @@ class AWSClientTests {
     }
 
     @Test func testClientRetryFail() async throws {
-        let mockHTTPClient = MockAWSHTTPClient { request in
-            MockAWSHTTPClient.AWSError(status: .serviceUnavailable, code: "ServiceUnavailable").response(for: .json(version: "1.1"))
+        let mockHTTPClient = MockHTTPClient { request in
+            MockHTTPClient.AWSError(status: .serviceUnavailable, code: "ServiceUnavailable").response(for: .json(version: "1.1"))
         }
         let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(base: .milliseconds(50)), httpClient: mockHTTPClient)
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
@@ -438,7 +416,7 @@ class AWSClientTests {
         let data = createRandomBuffer(45, 109, size: 128 * 1024)
         let sourceByteBuffer = ByteBuffer(bytes: data)
 
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             .init(
                 response: .init(status: .ok, headerFields: [HTTPField.Name("test")!: "TestHeader"]),
                 body: .init(asyncSequence: sourceByteBuffer.asyncSequence(chunkSize: 15000), length: nil)

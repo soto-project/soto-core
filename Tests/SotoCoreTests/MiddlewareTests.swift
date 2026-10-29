@@ -50,7 +50,7 @@ class MiddlewareTests {
         uri: String = "/",
         test: @escaping @Sendable (AWSHTTPRequest) -> Void
     ) async throws {
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             test(request)
             return .init(response: .init(status: .ok))
         }

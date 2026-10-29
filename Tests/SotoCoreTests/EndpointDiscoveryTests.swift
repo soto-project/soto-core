@@ -109,7 +109,7 @@ struct EndpointDiscoveryTests {
     @Test func testCachingEndpointDiscovery() async throws {
         let endpoint = "api.localhost:8090"
         let endpointCalledCount = Atomic(0)
-        let httpClient = MockAWSHTTPClient { request in
+        let httpClient = MockHTTPClient { request in
             switch request.request.path {
             case "/test":
                 #expect(request.request.authority == "api.localhost:8090")
@@ -139,7 +139,7 @@ struct EndpointDiscoveryTests {
     @Test func testConcurrentEndpointDiscovery() async throws {
         let endpoint = "api.localhost:8090"
         let endpointCalledCount = Atomic(0)
-        let httpClient = MockAWSHTTPClient { request in
+        let httpClient = MockHTTPClient { request in
             switch request.request.path {
             case "/test":
                 #expect(request.request.authority == "api.localhost:8090")
@@ -173,7 +173,7 @@ struct EndpointDiscoveryTests {
     @Test func testDontCacheEndpoint() async throws {
         let endpoint = "api.localhost:8090"
         let endpointCalledCount = Atomic(0)
-        let httpClient = MockAWSHTTPClient { request in
+        let httpClient = MockHTTPClient { request in
             switch request.request.path {
             case "/test":
                 #expect(request.request.authority == "api.localhost:8090")
@@ -202,7 +202,7 @@ struct EndpointDiscoveryTests {
 
     @Test func testNotRequiredEndpointDiscovery() async throws {
         let endpoint = "api.localhost:8090"
-        let httpClient = MockAWSHTTPClient { request in
+        let httpClient = MockHTTPClient { request in
             switch request.request.path {
             case "/testNotRequired":
                 #expect(request.request.authority != "api.localhost:8090")

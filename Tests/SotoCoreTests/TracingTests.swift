@@ -37,7 +37,7 @@ struct TracingTests {
         )
         let client = createAWSClient(
             credentialProvider: .empty,
-            httpClient: MockAWSHTTPClient { _ in
+            httpClient: MockHTTPClient { _ in
                 .init(response: .init(status: .ok, headerFields: [.xAmzRequestID: "test-request-1"]))
             }
         )

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HTTPTypes
 import InMemoryLogging
 import Logging
@@ -21,12 +22,12 @@ import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import SotoTestUtils
 import Synchronization
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class LoggingTests: XCTestCase {
-    func testRequestIdIncrements() async throws {
+struct LoggingTests {
+    @Test func testRequestIdIncrements() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
@@ -46,13 +47,13 @@ class LoggingTests: XCTestCase {
 
             let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
             let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
-            XCTAssertNotNil(requestId1)
-            XCTAssertNotNil(requestId2)
-            XCTAssertNotEqual(requestId1, requestId2)
+            #expect(requestId1 != nil)
+            #expect(requestId2 != nil)
+            #expect(requestId1 != requestId2)
         }
     }
 
-    func testAWSRequestResponse() async throws {
+    @Test func testAWSRequestResponse() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
@@ -75,19 +76,19 @@ class LoggingTests: XCTestCase {
                 logger: logger
             )
             let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
-            XCTAssertNotNil(requestEntry)
-            XCTAssertEqual(requestEntry?.level, .debug)
-            XCTAssertEqual(requestEntry?.metadata["aws-operation"], "TestOperation")
-            XCTAssertEqual(requestEntry?.metadata["aws-service"], "test-service")
+            #expect(requestEntry != nil)
+            #expect(requestEntry?.level == .debug)
+            #expect(requestEntry?.metadata["aws-operation"] == "TestOperation")
+            #expect(requestEntry?.metadata["aws-service"] == "test-service")
             let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
-            XCTAssertNotNil(responseEntry)
-            XCTAssertEqual(responseEntry?.level, .trace)
-            XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
-            XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
+            #expect(responseEntry != nil)
+            #expect(responseEntry?.level == .trace)
+            #expect(responseEntry?.metadata["aws-operation"] == "TestOperation")
+            #expect(responseEntry?.metadata["aws-service"] == "test-service")
         }
     }
 
-    func testAWSError() async throws {
+    @Test func testAWSError() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
@@ -107,12 +108,12 @@ class LoggingTests: XCTestCase {
 
             _ = try? await client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
-            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message == "AWS Error")
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level == .info)
         }
     }
 
-    func testRetryRequest() async throws {
+    @Test func testRetryRequest() async throws {
         struct TestError: Error {}
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
@@ -138,12 +139,12 @@ class LoggingTests: XCTestCase {
 
             _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
-            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message == "Retrying request")
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level == .trace)
         }
     }
 
-    func testNoCredentialProvider() async throws {
+    @Test func testNoCredentialProvider() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
@@ -159,11 +160,11 @@ class LoggingTests: XCTestCase {
                     logger: logger
                 )
             } catch {}
-            XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." } != nil)
         }
     }
 
-    func testRequestLogLevel() async throws {
+    @Test func testRequestLogLevel() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
@@ -186,12 +187,12 @@ class LoggingTests: XCTestCase {
                 serviceConfig: config,
                 logger: logger
             )
-            let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
-            XCTAssertEqual(requestEntry.level, .trace)
+            let requestEntry = try #require(inMemoryLogging.entries.first { $0.message == "AWS Request" })
+            #expect(requestEntry.level == .trace)
         }
     }
 
-    func testLoggingMiddleware() async throws {
+    @Test func testLoggingMiddleware() async throws {
         struct Output: AWSDecodableShape & Encodable {
             let s: String
         }
@@ -224,8 +225,8 @@ class LoggingTests: XCTestCase {
                 serviceConfig: config,
                 logger: traceLogger
             )
-            XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
-            XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
+            #expect(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") } != nil)
+            #expect(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") } != nil)
         }
     }
 }

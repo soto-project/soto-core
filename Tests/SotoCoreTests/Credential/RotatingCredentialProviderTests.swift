@@ -43,10 +43,7 @@ struct RotatingCredentialProviderTests {
     }
 
     @Test func testSetupShutdown() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
 
         let client = RotatingCredentialTestClient {
             try await Task.sleep(nanoseconds: 5_000_000_000)
@@ -68,10 +65,7 @@ struct RotatingCredentialProviderTests {
     }
 
     @Test func testGetCredentialAndReuseIfStillValid() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
 
         let cred = Credential(
             accessKeyId: "abc123",
@@ -109,10 +103,7 @@ struct RotatingCredentialProviderTests {
     }
 
     @Test func testGetCredentialAndGetNewOnesAsAboutToExpire() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
 
         let creds = [
             Credential(
@@ -159,10 +150,7 @@ struct RotatingCredentialProviderTests {
     }
 
     @Test func testGetCredentialHighlyConcurrent() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
 
         let cred = Credential(
             accessKeyId: "abc123",
@@ -203,10 +191,7 @@ struct RotatingCredentialProviderTests {
     /// Test that even though we are at the point where the token has almost expired
     /// we only kick off one token renew
     @Test func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
 
         let iterations = 50
         let count = ManagedAtomic(0)

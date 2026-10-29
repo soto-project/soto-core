@@ -20,14 +20,14 @@ import Testing
 @testable import SotoCore
 
 struct RuntimeSelectorCredentialProviderTests {
-    @Test func testSetupFail() async {
+    @Test func testSetupFail() async throws {
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        do {
-            _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-            Issue.record("Shouldn't get here")
-        } catch {
-            #expect(error as? CredentialProviderError == CredentialProviderError.noProvider)
+        try await withClient(client) {
+            let error = await #expect(throws: CredentialProviderError.self) {
+                _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            }
+            #expect(error == .noProvider)
+
         }
     }
 
@@ -39,22 +39,24 @@ struct RuntimeSelectorCredentialProviderTests {
     @Test func testFoundEmptyProvider() async throws {
         let provider: CredentialProviderFactory = .selector(.empty, .environment)
         let client = createAWSClient(credentialProvider: provider)
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        #expect(credential.accessKeyId == "")
-        #expect(credential.secretAccessKey == "")
-        #expect(credential.sessionToken == nil)
-        let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        #expect(internalProvider is EmptyCredentialProvider)
+        try await withClient(client) {
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.accessKeyId == "")
+            #expect(credential.secretAccessKey == "")
+            #expect(credential.sessionToken == nil)
+            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+            #expect(internalProvider is EmptyCredentialProvider)
+        }
     }
 
     @Test func testFoundSelectorWithOneProvider() async throws {
         let provider: CredentialProviderFactory = .selector(.empty)
         let client = createAWSClient(credentialProvider: provider)
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        #expect(credential.isEmpty())
-        #expect(client.credentialProvider is EmptyCredentialProvider)
+        try await withClient(client) {
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.isEmpty())
+            #expect(client.credentialProvider is EmptyCredentialProvider)
+        }
     }
 
     @Test func testEC2Provider() async throws {
@@ -66,17 +68,18 @@ struct RuntimeSelectorCredentialProviderTests {
         }
 
         let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+        try await withClient(client) {
+            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
-        #expect(throws: Never.self) { try testServer.ec2MetadataServer(version: .v2) }
+            #expect(throws: Never.self) { try testServer.ec2MetadataServer(version: .v2) }
 
-        let credential = try await credentialTask
-        #expect(credential.accessKeyId == AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
-        #expect(credential.secretAccessKey == AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
-        #expect(credential.sessionToken == AWSTestServer.EC2InstanceMetaData.default.token)
-        let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        #expect(internalProvider is RotatingCredentialProvider)
+            let credential = try await credentialTask
+            #expect(credential.accessKeyId == AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
+            #expect(credential.secretAccessKey == AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
+            #expect(credential.sessionToken == AWSTestServer.EC2InstanceMetaData.default.token)
+            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+            #expect(internalProvider is RotatingCredentialProvider)
+        }
     }
 
     @Test func testConfigFileProvider() async throws {
@@ -91,21 +94,23 @@ struct RuntimeSelectorCredentialProviderTests {
         defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
 
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: filename), .empty))
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        #expect(credential.accessKeyId == "AWSACCESSKEYID")
-        #expect(credential.secretAccessKey == "AWSSECRETACCESSKEY")
-        #expect(credential.sessionToken == nil)
-        let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        #expect(internalProvider is RotatingCredentialProvider)
+        try await withClient(client) {
+            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.accessKeyId == "AWSACCESSKEYID")
+            #expect(credential.secretAccessKey == "AWSSECRETACCESSKEY")
+            #expect(credential.sessionToken == nil)
+            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+            #expect(internalProvider is RotatingCredentialProvider)
+        }
     }
 
     @Test func testConfigFileProviderFail() async throws {
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-        _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        #expect(internalProvider is EmptyCredentialProvider)
+        try await withClient(client) {
+            _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+            #expect(internalProvider is EmptyCredentialProvider)
+        }
     }
 
     @Suite(.serialized)
@@ -120,17 +125,18 @@ struct RuntimeSelectorCredentialProviderTests {
             Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
             let client = createAWSClient(credentialProvider: .selector(.environment, .empty))
-            defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-            let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-            #expect(credential.accessKeyId == accessKeyId)
-            #expect(credential.secretAccessKey == secretAccessKey)
-            #expect(credential.sessionToken == sessionToken)
-            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-            #expect(internalProvider is StaticCredentialProvider)
+            try await withClient(client) {
+                let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+                #expect(credential.accessKeyId == accessKeyId)
+                #expect(credential.secretAccessKey == secretAccessKey)
+                #expect(credential.sessionToken == sessionToken)
+                let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+                #expect(internalProvider is StaticCredentialProvider)
 
-            Environment.unset(name: "AWS_ACCESS_KEY_ID")
-            Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
-            Environment.unset(name: "AWS_SESSION_TOKEN")
+                Environment.unset(name: "AWS_ACCESS_KEY_ID")
+                Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
+                Environment.unset(name: "AWS_SESSION_TOKEN")
+            }
         }
 
         @Test func testEnvironmentProviderFail() async throws {
@@ -138,12 +144,13 @@ struct RuntimeSelectorCredentialProviderTests {
 
             let provider: CredentialProviderFactory = .selector(.environment)
             let client = createAWSClient(credentialProvider: provider)
-            defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-            do {
-                _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-                Issue.record("Should not get here")
-            } catch {
-                #expect(error as? CredentialProviderError == CredentialProviderError.noProvider)
+            try await withClient(client) {
+                do {
+                    _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+                    Issue.record("Should not get here")
+                } catch {
+                    #expect(error as? CredentialProviderError == CredentialProviderError.noProvider)
+                }
             }
         }
 
@@ -165,32 +172,32 @@ struct RuntimeSelectorCredentialProviderTests {
             }
             let provider: CredentialProviderFactory = .selector(.environment, customECS, .empty)
             let client = createAWSClient(credentialProvider: provider)
-            defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+            try await withClient(client) {
+                async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
-            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+                #expect(throws: Never.self) { try testServer.ecsMetadataServer(path: path) }
 
-            #expect(throws: Never.self) { try testServer.ecsMetadataServer(path: path) }
-
-            let credential = try await credentialTask
-            #expect(credential.accessKeyId == AWSTestServer.ECSMetaData.default.accessKeyId)
-            #expect(credential.secretAccessKey == AWSTestServer.ECSMetaData.default.secretAccessKey)
-            #expect(credential.sessionToken == AWSTestServer.ECSMetaData.default.token)
-            let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-            #expect(internalProvider is RotatingCredentialProvider)
+                let credential = try await credentialTask
+                #expect(credential.accessKeyId == AWSTestServer.ECSMetaData.default.accessKeyId)
+                #expect(credential.secretAccessKey == AWSTestServer.ECSMetaData.default.secretAccessKey)
+                #expect(credential.sessionToken == AWSTestServer.ECSMetaData.default.token)
+                let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
+                #expect(internalProvider is RotatingCredentialProvider)
+            }
         }
 
-        @Test func testECSProviderFail() async {
+        @Test func testECSProviderFail() async throws {
             Environment.unset(name: "AWS_ACCESS_KEY_ID")
             Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
 
             let provider: CredentialProviderFactory = .selector(.ecs)
             let client = createAWSClient(credentialProvider: provider)
-            defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-            do {
-                _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-                Issue.record("Should not get here")
-            } catch {
-                #expect(error as? CredentialProviderError == .noProvider)
+            try await withClient(client) {
+                let error = await #expect(throws: CredentialProviderError.self) {
+                    _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+                }
+                #expect(error == .noProvider)
+
             }
         }
 

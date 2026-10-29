@@ -77,7 +77,7 @@ struct CredentialProviderTests {
             aws_access_key_id = AWSACCESSKEYID
             aws_secret_access_key = AWSSECRETACCESSKEY
             """
-        let filename = "credentials"
+        let filename = "testConfigFileSuccess-credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
         defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }

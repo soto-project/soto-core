@@ -12,31 +12,25 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Atomics
+import Foundation
 import HTTPTypes
 import Logging
 import NIOCore
 import NIOHTTP1
 import SotoCore
 import SotoTestUtils
-import XCTest
+import Synchronization
+import Testing
 
-final class EndpointDiscoveryTests: XCTestCase {
+struct EndpointDiscoveryTests {
     final class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
-        let endpointToDiscover: String
-        let getEndpointsCalledCount = ManagedAtomic(0)
 
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
-            self.endpointToDiscover = from.endpointToDiscover
-            self.getEndpointsCalledCount.store(
-                from.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent),
-                ordering: .sequentiallyConsistent
-            )
             self.endpointStorage = AWSEndpointStorage()
         }
 
@@ -52,16 +46,37 @@ final class EndpointDiscoveryTests: XCTestCase {
                 apiVersion: "2021-08-08",
                 endpoint: endpoint
             )
-            self.endpointToDiscover = endpointToDiscover
             self.endpointStorage = AWSEndpointStorage()
         }
 
+        struct Endpoints: AWSDecodableShape & AWSEncodableShape {
+            struct Endpoint: AWSDecodableShape & AWSEncodableShape {
+                /// IP address of the endpoint.
+                public let address: String
+                /// Endpoint cache time to live (TTL) value.
+                public let cachePeriodInMinutes: Int64
+            }
+            let endpoints: [Endpoint]
+        }
         struct TestRequest: AWSEncodableShape {}
 
-        @Sendable public func getEndpoints(logger: Logger) async throws -> AWSEndpoints {
-            self.getEndpointsCalledCount.wrappingIncrement(ordering: .sequentiallyConsistent)
-            try await Task.sleep(nanoseconds: 200_000_000)
-            return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
+        @Sendable public func describeEndpoints(logger: Logger) async throws -> Endpoints {
+            try await self.client.execute(
+                operation: "DescribeEndpoints",
+                path: "/endpoint",
+                httpMethod: .get,
+                serviceConfig: self.config,
+                logger: logger
+            )
+        }
+
+        func getEndpoints(logger: Logger) async throws -> AWSEndpoints {
+            let response = try await self.describeEndpoints(logger: logger)
+            return .init(
+                endpoints: response.endpoints.map {
+                    .init(address: "https://\($0.address)", cachePeriodInMinutes: $0.cachePeriodInMinutes)
+                }
+            )
         }
 
         public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
@@ -77,28 +92,10 @@ final class EndpointDiscoveryTests: XCTestCase {
             )
         }
 
-        @Sendable public func getEndpointsDontCache(logger: Logger) async throws -> AWSEndpoints {
-            self.getEndpointsCalledCount.wrappingIncrement(ordering: .sequentiallyConsistent)
-            try await Task.sleep(nanoseconds: 200_000_000)
-            return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
-        }
-
-        public func testDontCache(logger: Logger = AWSClient.loggingDisabled) async throws {
-            try await self.client.execute(
-                operation: "Test",
-                path: "/test",
-                httpMethod: .get,
-                serviceConfig: self.config.with(
-                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true)
-                ),
-                logger: logger
-            )
-        }
-
         public func testNotRequired(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
             try await self.client.execute(
-                operation: "Test",
-                path: "/test",
+                operation: "TestNotRequired",
+                path: "/testNotRequired",
                 httpMethod: .get,
                 serviceConfig: self.config.with(
                     middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: false)
@@ -109,118 +106,122 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
     }
 
-    func testCachingEndpointDiscovery() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
-        let awsServer = AWSTestServer(serviceProtocol: .restjson)
-        let client = AWSClient(credentialProvider: .empty)
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
-        }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
-
-        async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response, continueProcessing: false)
-        }
-        try await response1
-        async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response, continueProcessing: false)
-        }
-        try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 1)
-    }
-
-    func testConcurrentEndpointDiscovery() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty)
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
-        }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
-
-        async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
-        async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
-
-        var count = 0
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            count += 1
-            if count > 1 {
-                return .result(response, continueProcessing: false)
-            } else {
-                return .result(response, continueProcessing: true)
+    @Test func testCachingEndpointDiscovery() async throws {
+        let endpoint = "api.localhost:8090"
+        let endpointCalledCount = Atomic(0)
+        let httpClient = MockHTTPClient { request in
+            switch request.request.path {
+            case "/test":
+                #expect(request.request.authority == "api.localhost:8090")
+                return .init(response: .init(status: .ok))
+            case "/endpoint":
+                endpointCalledCount.add(1, ordering: .relaxed)
+                try await Task.sleep(nanoseconds: 200_000_000)
+                let endpoints = Service.Endpoints(endpoints: [
+                    .init(address: endpoint, cachePeriodInMinutes: 60)
+                ])
+                let json = try JSONEncoder().encode(endpoints)
+                return .init(response: .init(status: .ok), body: .init(bytes: json))
+            default:
+                return .init(response: .init(status: .notFound))
             }
         }
+        let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
 
-        try await response1
-        try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 1)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
+        }
     }
 
-    func testDontCacheEndpoint() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty)
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
+    @Test func testConcurrentEndpointDiscovery() async throws {
+        let endpoint = "api.localhost:8090"
+        let endpointCalledCount = Atomic(0)
+        let httpClient = MockHTTPClient { request in
+            switch request.request.path {
+            case "/test":
+                #expect(request.request.authority == "api.localhost:8090")
+                return .init(response: .init(status: .ok))
+            case "/endpoint":
+                endpointCalledCount.add(1, ordering: .relaxed)
+                try await Task.sleep(nanoseconds: 200_000_000)
+                let endpoints = Service.Endpoints(endpoints: [
+                    .init(address: endpoint, cachePeriodInMinutes: 60)
+                ])
+                let json = try JSONEncoder().encode(endpoints)
+                return .init(response: .init(status: .ok), body: .init(bytes: json))
+            default:
+                return .init(response: .init(status: .notFound))
+            }
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
+        let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
 
-        async let response1: () = service.testDontCache(logger: TestEnvironment.logger)
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response, continueProcessing: false)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+
+            async let response1 = service.test(.init(), logger: TestEnvironment.logger)
+            async let response2 = service.test(.init(), logger: TestEnvironment.logger)
+
+            try await response1
+            try await response2
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
         }
-        try await response1
-        async let response2: () = service.testDontCache(logger: TestEnvironment.logger)
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response, continueProcessing: false)
-        }
-        try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 2)
     }
 
-    func testDisableEndpointDiscovery() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty)
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
+    @Test func testDontCacheEndpoint() async throws {
+        let endpoint = "api.localhost:8090"
+        let endpointCalledCount = Atomic(0)
+        let httpClient = MockHTTPClient { request in
+            switch request.request.path {
+            case "/test":
+                #expect(request.request.authority == "api.localhost:8090")
+                return .init(response: .init(status: .ok))
+            case "/endpoint":
+                endpointCalledCount.add(1, ordering: .relaxed)
+                try await Task.sleep(nanoseconds: 200_000_000)
+                let endpoints = Service.Endpoints(endpoints: [
+                    .init(address: endpoint, cachePeriodInMinutes: 0)
+                ])
+                let json = try JSONEncoder().encode(endpoints)
+                return .init(response: .init(status: .ok), body: .init(bytes: json))
+            default:
+                return .init(response: .init(status: .notFound))
+            }
         }
-        let service = Service(client: client, endpoint: awsServer.address)
-            .with(middleware: TestEnvironment.middlewares)
+        let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
 
-        async let response: () = service.testNotRequired(.init(), logger: TestEnvironment.logger)
-
-        try awsServer.processRaw { request in
-            TestEnvironment.logger.info("\(request)")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response, continueProcessing: false)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 2)
         }
+    }
 
-        try await response
-        XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 0)
+    @Test func testNotRequiredEndpointDiscovery() async throws {
+        let endpoint = "api.localhost:8090"
+        let httpClient = MockHTTPClient { request in
+            switch request.request.path {
+            case "/testNotRequired":
+                #expect(request.request.authority != "api.localhost:8090")
+                return .init(response: .init(status: .ok))
+            case "/endpoint":
+                try await Task.sleep(for: .milliseconds(200))
+                let endpoints = Service.Endpoints(endpoints: [
+                    .init(address: endpoint, cachePeriodInMinutes: 60)
+                ])
+                let json = try JSONEncoder().encode(endpoints)
+                return .init(response: .init(status: .ok), body: .init(bytes: json))
+            default:
+                return .init(response: .init(status: .notFound))
+            }
+        }
+        let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+            _ = try await service.testNotRequired(.init(), logger: TestEnvironment.logger)
+        }
     }
 }

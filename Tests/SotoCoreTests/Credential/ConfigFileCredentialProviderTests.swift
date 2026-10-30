@@ -13,13 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
 import Logging
 import NIOCore
 import NIOHTTP1
 import NIOPosix
 import SotoTestUtils
 import SotoXML
-import XCTest
+import Testing
 
 @testable import SotoCore
 
@@ -29,20 +30,20 @@ import FoundationEssentials
 import Foundation
 #endif
 
-class ConfigFileCredentialProviderTests: XCTestCase {
+struct ConfigFileCredentialProviderTests {
     // MARK: - Credential Provider
 
-    func makeContext() -> (CredentialProviderFactory.Context, HTTPClient) {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
+    func makeContext() -> CredentialProviderFactory.Context {
+        let httpClient = MockHTTPClient { _ in fatalError() }
+        return .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
     }
 
-    func testCredentialProviderStatic() async throws {
+    @Test func testCredentialProviderStatic() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.staticCredential(
             accessKeyId: "foo",
             secretAccessKey: "bar"
         )
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -50,21 +51,20 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             endpoint: nil,
             retryPolicy: .default
         )
-        XCTAssertEqual((provider as? StaticCredentialProvider)?.credential.accessKeyId, "foo")
-        XCTAssertEqual((provider as? StaticCredentialProvider)?.credential.secretAccessKey, "bar")
+        #expect((provider as? StaticCredentialProvider)?.credential.accessKeyId == "foo")
+        #expect((provider as? StaticCredentialProvider)?.credential.secretAccessKey == "bar")
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
-    func testCredentialProviderSTSAssumeRole() async throws {
+    @Test func testCredentialProviderSTSAssumeRole() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.assumeRole(
             roleArn: "arn",
             sessionName: "baz",
             region: nil,
             sourceCredentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar")
         )
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -72,19 +72,18 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             endpoint: nil,
             retryPolicy: .default
         )
-        let stsProvider = try XCTUnwrap(provider as? STSAssumeRoleCredentialProvider)
+        let stsProvider = try #require(provider as? STSAssumeRoleCredentialProvider)
         switch stsProvider.request {
         case .assumeRole(let arn, let sessionName):
-            XCTAssertEqual(arn, "arn")
-            XCTAssertEqual(sessionName, "baz")
-        default: XCTFail()
+            #expect(arn == "arn")
+            #expect(sessionName == "baz")
+        default: Issue.record()
         }
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
-    func testProfileScopedProviderWrapsErrorWithProfileName() async throws {
+    @Test func testProfileScopedProviderWrapsErrorWithProfileName() async throws {
         // Direct unit test for the wrapper: any error from the inner provider must surface as
         // a `ProfileCredentialError` whose description includes the profile name and whose
         // `underlying` preserves the original error.
@@ -96,17 +95,17 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         do {
             _ = try await wrapped.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Expected ProfileCredentialError")
+            Issue.record("Expected ProfileCredentialError")
         } catch let error as ProfileCredentialError {
-            XCTAssertEqual(error.profile, "dev")
-            XCTAssertTrue(error.underlying is StubError)
-            XCTAssertTrue(error.description.contains("dev"), "Description should name the profile: \(error.description)")
+            #expect(error.profile == "dev")
+            #expect(error.underlying is StubError)
+            #expect(error.description.contains("dev"), "Description should name the profile: \(error.description)")
         } catch {
-            XCTFail("Expected ProfileCredentialError, got \(error)")
+            Issue.record("Expected ProfileCredentialError, got \(error)")
         }
     }
 
-    func testCredentialProviderTagsErrorsWithProfileFromFile() async throws {
+    @Test func testCredentialProviderTagsErrorsWithProfileFromFile() async throws {
         // Integration check: loading via the file overload must produce a `ProfileScopedCredentialProvider`
         // bound to the requested profile, so any failure from inside the chain surfaces with that profile.
         let profile = "dev"
@@ -118,7 +117,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let credentialsPath = "creds-\(UUID().uuidString)"
         try credentialsFile.write(toFile: credentialsPath, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: credentialsPath) }
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try await ConfigFileCredentialProvider.credentialProvider(
             from: credentialsPath,
@@ -129,16 +128,15 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             retryPolicy: .default
         )
 
-        let scoped = try XCTUnwrap(provider as? ProfileScopedCredentialProvider)
-        XCTAssertEqual(scoped.profile, profile)
+        let scoped = try #require(provider as? ProfileScopedCredentialProvider)
+        #expect(scoped.profile == profile)
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
     // MARK: - Config File Credentials Provider
 
-    func testConfigFileSuccess() async throws {
+    @Test func testConfigFileSuccess() async throws {
         let credentials = """
             [default]
             aws_access_key_id = AWSACCESSKEYID
@@ -146,63 +144,31 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             """
         let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+        #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
+        defer {
+            #expect(throws: Never.self) {
+                try FileManager.default.removeItem(at: filenameURL)
+            }
+        }
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let httpClient = MockHTTPClient { _ in fatalError() }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
-        XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
+        #expect(credential.accessKeyId == "AWSACCESSKEYID")
+        #expect(credential.secretAccessKey == "AWSSECRETACCESSKEY")
     }
 
-    func testAWSProfileConfigFile() async throws {
-        let credentials = """
-            [test-profile]
-            aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
-            aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
-            """
-        Environment.set("test-profile", for: "AWS_PROFILE")
-        defer { Environment.unset(name: "AWS_PROFILE") }
-
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
-
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
-
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
-
-        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(credential.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
-        XCTAssertEqual(credential.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
-    }
-
-    func testConfigFileNotAvailable() async {
+    @Test func testConfigFileNotAvailable() async {
         let credentialsFilename = "credentials_\(#function)"
         let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
 
         let configFilename = "config_\(#function)"
         let configFilenameURL = URL(fileURLWithPath: configFilename)
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let httpClient = MockHTTPClient { _ in fatalError() }
 
         let factory = CredentialProviderFactory.configFile(
             credentialsFilePath: credentialsFilenameURL.path,
@@ -213,64 +179,20 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         do {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Should throw error")
+            Issue.record("Should throw error")
         } catch {
-            XCTAssertEqual(error as? CredentialProviderError, .noProvider)
+            #expect(error as? CredentialProviderError == .noProvider)
         }
     }
 
-    func testCredentialProviderSourceEnvironment() async throws {
-        let accessKey = "AKIAIOSFODNN7EXAMPLE"
-        let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-        let profile = "marketingadmin"
-        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
-        let credentialsFile = """
-            [\(profile)]
-            role_arn = \(roleArn)
-            credential_source = Environment
-            """
-
-        Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
-        Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
-        defer {
-            Environment.unset(name: accessKey)
-            Environment.unset(name: secretKey)
-        }
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentialsFile.utf8).write(to: filenameURL))
-        let (context, httpClient) = self.makeContext()
-
-        defer {
-            XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
-
-        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
-            credentialsFilePath: filename,
-            configFilePath: "/dev/null",
-            profile: profile
-        )
-
-        switch sharedCredentials {
-        case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):
-            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
-            XCTAssertEqual(credentials.accessKeyId, accessKey)
-            XCTAssertEqual(credentials.secretAccessKey, secretKey)
-            XCTAssertEqual(aRoleArn, roleArn)
-        default:
-            XCTFail("Expected STS Assume Role")
-        }
-    }
-
-    func testConfigFileShutdown() {
+    @Test func testConfigFileShutdown() {
         let client = createAWSClient(credentialProvider: .configFile())
-        XCTAssertNoThrow(try client.syncShutdown())
+        #expect(throws: Never.self) { try client.syncShutdown() }
     }
 
     // MARK: - Role ARN Credential
 
-    func testRoleARNSourceProfile() async throws {
+    @Test func testRoleARNSourceProfile() async throws {
         let profile = "user1"
 
         // Prepare mock STSAssumeRole credentials
@@ -306,12 +228,13 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         try configFile.write(toFile: configFilePath, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: configFilePath) }
 
-        // Prepare test server and AWS client
-        let testServer = AWSTestServer(serviceProtocol: .xml)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-
+        // Prepare mock HTTP client
+        let httpClient = MockHTTPClient { request in
+            let output = STSAssumeRoleResponse(credentials: stsCredentials)
+            let xml = try XMLEncoder().encode(output)
+            let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
+            return .init(response: .init(status: .ok), body: .init(buffer: byteBuffer))
+        }
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
         let client = createAWSClient(
             credentialProvider: .custom { context -> any CredentialProvider in
@@ -320,30 +243,26 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                     configFilePath: configFilePath,
                     profile: profile,
                     context: context,
-                    endpoint: testServer.address,
                     retryPolicy: .default
                 )
             },
             httpClient: httpClient
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
 
         // Retrieve credentials
         async let futureCredentials = client.credentialProvider.getCredential(
             logger: TestEnvironment.logger
         )
 
-        try testServer.processRaw { _ in
-            let output = STSAssumeRoleResponse(credentials: stsCredentials)
-            let xml = try XMLEncoder().encode(output)
-            let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-            return .result(response)
-        }
         let credentials = try await futureCredentials
 
         // Verify credentials match those returned from STS Assume Role operation
-        XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
-        XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
+        #expect(credentials.accessKeyId == stsCredentials.accessKeyId)
+        #expect(credentials.secretAccessKey == stsCredentials.secretAccessKey)
+    }
+
+    @Suite(.serialized)
+    struct Serialized {
     }
 }

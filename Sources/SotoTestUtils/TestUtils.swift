@@ -16,7 +16,6 @@ import AsyncHTTPClient
 public import Logging
 import NIOCore
 import SotoCore
-import XCTest
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -96,6 +95,17 @@ public func createServiceConfig(
         timeout: timeout,
         options: options
     )
+}
+
+package func withClient<Value>(_ awsClient: AWSClient, operation: () async throws -> Value) async throws -> Value {
+    let result: Result<Value, any Error>
+    do {
+        result = .success(try await operation())
+    } catch {
+        result = .failure(error)
+    }
+    try await awsClient.shutdown()
+    return try result.get()
 }
 
 // create a buffer of random values. Will always create the same given you supply the same z and w values

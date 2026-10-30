@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -83,7 +84,7 @@ final class LoginCredentialProviderTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client and response
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             // Verify request
             #expect(request.method == .post)
             #expect(request.headers[.contentType] == "application/json")
@@ -117,7 +118,7 @@ final class LoginCredentialProviderTests {
                 }
                 """
 
-            return (.ok, responseJSON.data(using: .utf8)!)
+            return .init(response: .init(status: .ok), body: .init(string: responseJSON))
         }
 
         // Create provider
@@ -191,8 +192,8 @@ final class LoginCredentialProviderTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client and response
-        let mockHTTPClient = MockAWSHTTPClient { request in
-            (.badRequest, Data())
+        let mockHTTPClient = MockHTTPClient { request in
+            .init(response: .init(status: .badRequest))
         }
 
         // Create provider
@@ -248,8 +249,8 @@ final class LoginCredentialProviderTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client and  mock response with invalid JSON
-        let mockHTTPClient = MockAWSHTTPClient { request in
-            (.ok, "invalid json".data(using: .utf8)!)
+        let mockHTTPClient = MockHTTPClient { request in
+            .init(response: .init(status: .ok), body: .init(string: "invalid json"))
         }
 
         // Create provider
@@ -277,7 +278,7 @@ final class LoginCredentialProviderTests {
             loginSession: "nonexistent-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
-            httpClient: MockAWSHTTPClient()
+            httpClient: MockHTTPClient()
         )
 
         // Should throw tokenLoadFailed error
@@ -333,9 +334,9 @@ final class LoginCredentialProviderTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client - - should not make any requests
-        let mockHTTPClient = MockAWSHTTPClient { _ in
+        let mockHTTPClient = MockHTTPClient { _ in
             Issue.record("Should not make HTTP request for valid cached token")
-            return (.ok, Data())
+            return .init(response: .init(status: .ok))
         }
 
         // Create provider
@@ -394,7 +395,7 @@ final class LoginCredentialProviderTests {
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
-            httpClient: MockAWSHTTPClient()
+            httpClient: MockHTTPClient()
         )
 
         let logger = Logger(label: "test")
@@ -446,7 +447,7 @@ final class LoginCredentialProviderTests {
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
-            httpClient: MockAWSHTTPClient()
+            httpClient: MockHTTPClient()
         )
 
         let logger = Logger(label: "test")
@@ -494,7 +495,7 @@ final class LoginCredentialProviderTests {
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
-            httpClient: MockAWSHTTPClient()
+            httpClient: MockHTTPClient()
         )
 
         let logger = Logger(label: "test")
@@ -552,7 +553,7 @@ final class LoginCredentialProviderTests {
         try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: tempDirectory.path)
 
         // Mock HTTP client returns fresh credentials
-        let mockHTTPClient = MockAWSHTTPClient { _ in
+        let mockHTTPClient = MockHTTPClient { _ in
             let responseJSON = """
                 {
                     "accessToken": {
@@ -565,7 +566,7 @@ final class LoginCredentialProviderTests {
                     "refreshToken": "new-refresh-token-456"
                 }
                 """
-            return (.ok, responseJSON.data(using: .utf8)!)
+            return .init(response: .init(status: .ok), body: .init(string: responseJSON))
         }
 
         let provider = try LoginCredentialProvider.create(
@@ -594,7 +595,7 @@ final class LoginCredentialProviderTests {
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
-            httpClient: MockAWSHTTPClient()
+            httpClient: MockHTTPClient()
         )
 
         // Provider should be immutable - no var properties, no mutating methods

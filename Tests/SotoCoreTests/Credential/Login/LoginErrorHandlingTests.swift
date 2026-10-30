@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import SotoCore
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -79,11 +80,11 @@ final class LoginErrorHandlingTests {
 
         // Setup mock HTTP client
         // Mock server returns TOKEN_EXPIRED error
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"TOKEN_EXPIRED","message":"The refresh token has expired."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(
@@ -141,11 +142,11 @@ final class LoginErrorHandlingTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"USER_CREDENTIALS_CHANGED","message":"User credentials have changed."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(
@@ -201,11 +202,11 @@ final class LoginErrorHandlingTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client
-        let mockHTTPClient = MockAWSHTTPClient { request in
+        let mockHTTPClient = MockHTTPClient { request in
             let errorResponse = """
                 {"error":"INSUFFICIENT_PERMISSIONS","message":"Insufficient permissions."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(

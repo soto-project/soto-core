@@ -30,51 +30,43 @@ struct TracingTests {
 
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(
             service: "TestService",
             serviceProtocol: .json(version: "1.1"),
-            endpoint: awsServer.address,
             middlewares: AWSTracingMiddleware()
         )
         let client = createAWSClient(
-            credentialProvider: .empty
+            credentialProvider: .empty,
+            httpClient: MockHTTPClient { _ in
+                .init(response: .init(status: .ok, headerFields: [.xAmzRequestID: "test-request-1"]))
+            }
         )
-        defer {
-            #expect(throws: Never.self) { try client.syncShutdown() }
-            #expect(throws: Never.self) { try awsServer.stop() }
+        try await withClient(client) {
+            let _: Void = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
+
+            let spans = tracer.popFinishedSpans()
+            // We should get two spans. One from AsyncHTTPClient and one from Soto. The second one is the Soto one
+            let span = try #require(spans.last)
+
+            #expect(span.operationName == "TestService.TestOperation")
+            #expect(span.errors.isEmpty)
+
+            XCTAssertSpanAttributesEqual(
+                span.attributes,
+                [
+                    "rpc.system": "aws-sdk",
+                    "rpc.method": "TestOperation",
+                    "rpc.service": "TestService",
+                    "aws.request_id": "test-request-1",
+                ]
+            )
         }
-        async let response: Void = client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: config,
-            logger: TestEnvironment.logger
-        )
-
-        try awsServer.processRaw { _ in
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: ["x-amz-request-id": "test-request-1"], body: nil)
-            return .result(response)
-        }
-
-        _ = try await response
-
-        let spans = tracer.popFinishedSpans()
-        // We should get two spans. One from AsyncHTTPClient and one from Soto. The second one is the Soto one
-        let span = try #require(spans.last)
-
-        #expect(span.operationName == "TestService.TestOperation")
-        #expect(span.errors.isEmpty)
-
-        XCTAssertSpanAttributesEqual(
-            span.attributes,
-            [
-                "rpc.system": "aws-sdk",
-                "rpc.method": "TestOperation",
-                "rpc.service": "TestService",
-                "aws.request_id": "test-request-1",
-            ]
-        )
     }
 }
 

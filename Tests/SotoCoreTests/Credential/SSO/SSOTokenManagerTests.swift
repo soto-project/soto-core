@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -37,7 +38,7 @@ extension SSOCredentialProviderTests {
     @Test("Invalid token JSON throws invalidTokenFormat error")
     func invalidTokenJSON() async throws {
         try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: "{ not valid json") { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -57,7 +58,7 @@ extension SSOCredentialProviderTests {
             """
 
         try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: tokenJSON) { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -73,7 +74,7 @@ extension SSOCredentialProviderTests {
             // Use a cache directory but no token file
             let provider = SSOCredentialProvider(
                 configuration: self.makeLegacyConfig(startUrl: "https://nonexistent.awsapps.com/start"),
-                httpClient: MockAWSHTTPClient()
+                httpClient: MockHTTPClient()
             )
 
             await #expect {
@@ -88,7 +89,7 @@ extension SSOCredentialProviderTests {
     func expiredLegacyToken() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl, expiresIn: -3600, accessToken: "expired-token") { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -107,7 +108,7 @@ extension SSOCredentialProviderTests {
             tokenJSON: makeModernTokenJSON(accessToken: "expiring-soon-token")
         ) { env in
             let requestCounter = RequestCounter()
-            let mockHTTPClient = MockAWSHTTPClient { request in
+            let mockHTTPClient = MockHTTPClient { request in
                 let url = request.request.url?.absoluteString ?? ""
                 await requestCounter.record(url)
 
@@ -159,7 +160,7 @@ extension SSOCredentialProviderTests {
     @Test("Token refresh failure throws tokenRefreshFailed error")
     func tokenRefreshFailure() async throws {
         try await withSSOEnvironment(cacheKey: "my-sso", tokenJSON: makeModernTokenJSON()) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in (.badRequest, Data()) }
+            let mockHTTPClient = MockHTTPClient { _ in .init(response: .init(status: .badRequest)) }
             let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: mockHTTPClient)
 
             await #expect {
@@ -176,7 +177,7 @@ extension SSOCredentialProviderTests {
             cacheKey: "my-sso",
             tokenJSON: makeModernTokenJSON(registrationExpiresIn: -3600)
         ) { env in
-            let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: MockAWSHTTPClient())
+            let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: MockHTTPClient())
 
             await #expect {
                 try await provider.getCredential(logger: self.logger)
@@ -190,7 +191,7 @@ extension SSOCredentialProviderTests {
 
     @Test("Token path uses SHA-1 hash of session name for modern format")
     func tokenPathModernFormat() throws {
-        let tokenManager = SSOTokenManager(httpClient: MockAWSHTTPClient())
+        let tokenManager = SSOTokenManager(httpClient: MockHTTPClient())
         let path = try tokenManager.constructTokenPath(config: makeModernConfig())
 
         let expectedHash = Insecure.SHA1.hash(data: Data("my-sso".utf8))
@@ -201,7 +202,7 @@ extension SSOCredentialProviderTests {
 
     @Test("Token path uses SHA-1 hash of start URL for legacy format")
     func tokenPathLegacyFormat() throws {
-        let tokenManager = SSOTokenManager(httpClient: MockAWSHTTPClient())
+        let tokenManager = SSOTokenManager(httpClient: MockHTTPClient())
         let path = try tokenManager.constructTokenPath(config: makeLegacyConfig())
 
         let expectedHash = Insecure.SHA1.hash(data: Data("https://test.awsapps.com/start".utf8))

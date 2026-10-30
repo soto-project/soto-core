@@ -12,144 +12,99 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
+import Foundation
+import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class MetaDataCredentialProviderTests: XCTestCase {
+@Suite(.serialized)
+struct MetaDataCredentialProviderTests {
     // MARK: - ECSMetaDataClient -
 
-    func testECSMetaDataClient() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
-
-        let loop = group.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
-
+    @Test func testECSMetaDataClient() async throws {
         let path = "/" + UUID().uuidString
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
-        let client = ECSMetaDataClient(httpClient: httpClient, host: testServer.address)
-        async let metaDataTask = client!.getMetaData(logger: TestEnvironment.logger)
+        let client = ECSMetaDataClient(httpClient: MockHTTPClient.ecsMetadataServer(path: path), host: "http://localhost:8080")
+        let metaData = try await client!.getMetaData(logger: TestEnvironment.logger)
 
-        // run fake server
-        XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
-
-        let metaData = try await metaDataTask
-        XCTAssertEqual(metaData.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
-        XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
-        XCTAssertEqual(metaData.token, AWSTestServer.ECSMetaData.default.token)
-        XCTAssertEqual(metaData.expiration.timeIntervalSinceNow, AWSTestServer.ECSMetaData.default.expiration.timeIntervalSinceNow, accuracy: 1.0)
-        XCTAssertEqual(metaData.roleArn, AWSTestServer.ECSMetaData.default.roleArn)
+        #expect(metaData.accessKeyId == MockHTTPClient.ECSMetaData.default.accessKeyId)
+        #expect(metaData.secretAccessKey == MockHTTPClient.ECSMetaData.default.secretAccessKey)
+        #expect(metaData.token == MockHTTPClient.ECSMetaData.default.token)
+        #expect(abs(metaData.expiration.timeIntervalSinceNow - MockHTTPClient.ECSMetaData.default.expiration.timeIntervalSinceNow) < 1.0)
+        #expect(metaData.roleArn == MockHTTPClient.ECSMetaData.default.roleArn)
     }
 
-    func testECSMetaDataClientDefaultHost() {
-        XCTAssertEqual(ECSMetaDataClient.Host, "http://169.254.170.2")
-        XCTAssertEqual(ECSMetaDataClient.RelativeURIEnvironmentName, "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
+    @Test func testECSMetaDataClientDefaultHost() {
+        #expect(ECSMetaDataClient.Host == "http://169.254.170.2")
+        #expect(ECSMetaDataClient.RelativeURIEnvironmentName == "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
     }
 
-    func testECSMetaDataClientIsNotCreatedWithoutEnvVariable() {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
-
-        let loop = group.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-
+    @Test func testECSMetaDataClientIsNotCreatedWithoutEnvVariable() {
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
-
-        XCTAssertNil(ECSMetaDataClient(httpClient: httpClient, host: "http://localhost"))
+        #expect(ECSMetaDataClient(httpClient: MockHTTPClient.ecsMetadataServer(path: "/"), host: "http://localhost") == nil)
     }
 
     // MARK: - InstanceMetaDataClient -
 
-    func testEC2InstanceMetaDataClientUsingVersion2() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
-
-        let loop = group.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
-
+    @Test func testEC2InstanceMetaDataClientUsingVersion2() async throws {
         let path = "/" + UUID().uuidString
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
-        async let metaDataTask = client.getMetaData(logger: TestEnvironment.logger)
-        // run fake server
-        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
+        let client = InstanceMetaDataClient(httpClient: MockHTTPClient.ec2MetadataServer(version: .v2), host: "http://localhost:8080")
+        let metaData = try await client.getMetaData(logger: TestEnvironment.logger)
 
-        let metaData = try await metaDataTask
-
-        XCTAssertEqual(metaData.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
-        XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
-        XCTAssertEqual(metaData.token, AWSTestServer.EC2InstanceMetaData.default.token)
-        XCTAssertEqual(
-            metaData.expiration.timeIntervalSinceNow,
-            AWSTestServer.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow,
-            accuracy: 1.0
+        #expect(metaData.accessKeyId == MockHTTPClient.EC2InstanceMetaData.default.accessKeyId)
+        #expect(metaData.secretAccessKey == MockHTTPClient.EC2InstanceMetaData.default.secretAccessKey)
+        #expect(metaData.token == MockHTTPClient.EC2InstanceMetaData.default.token)
+        #expect(
+            abs(metaData.expiration.timeIntervalSinceNow - MockHTTPClient.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow) < 1.0
         )
-        XCTAssertEqual(metaData.code, AWSTestServer.EC2InstanceMetaData.default.code)
-        XCTAssertEqual(metaData.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
-        XCTAssertEqual(metaData.type, AWSTestServer.EC2InstanceMetaData.default.type)
+        #expect(metaData.code == MockHTTPClient.EC2InstanceMetaData.default.code)
+        #expect(metaData.lastUpdated == MockHTTPClient.EC2InstanceMetaData.default.lastUpdated)
+        #expect(metaData.type == MockHTTPClient.EC2InstanceMetaData.default.type)
     }
 
-    func testEC2InstanceMetaDataClientUsingVersion1() async throws {
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+    @Test func testEC2InstanceMetaDataClientUsingVersion1() async throws {
+        let client = InstanceMetaDataClient(httpClient: MockHTTPClient.ec2MetadataServer(version: .v1), host: "http://localhost:8080")
+        let metaData = try await client.getMetaData(logger: TestEnvironment.logger)
 
-        let loop = group.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
-
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
-
-        async let metaDataTask = client.getMetaData(logger: TestEnvironment.logger)
-        // run fake server
-        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v1))
-
-        let metaData = try await metaDataTask
-
-        XCTAssertEqual(metaData.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
-        XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
-        XCTAssertEqual(metaData.token, AWSTestServer.EC2InstanceMetaData.default.token)
-        XCTAssertEqual(
-            metaData.expiration.timeIntervalSinceNow,
-            AWSTestServer.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow,
-            accuracy: 1.0
+        #expect(metaData.accessKeyId == MockHTTPClient.EC2InstanceMetaData.default.accessKeyId)
+        #expect(metaData.secretAccessKey == MockHTTPClient.EC2InstanceMetaData.default.secretAccessKey)
+        #expect(metaData.token == MockHTTPClient.EC2InstanceMetaData.default.token)
+        #expect(
+            abs(metaData.expiration.timeIntervalSinceNow - MockHTTPClient.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow) < 1.0
         )
-        XCTAssertEqual(metaData.code, AWSTestServer.EC2InstanceMetaData.default.code)
-        XCTAssertEqual(metaData.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
-        XCTAssertEqual(metaData.type, AWSTestServer.EC2InstanceMetaData.default.type)
+        #expect(metaData.code == MockHTTPClient.EC2InstanceMetaData.default.code)
+        #expect(metaData.lastUpdated == MockHTTPClient.EC2InstanceMetaData.default.lastUpdated)
+        #expect(metaData.type == MockHTTPClient.EC2InstanceMetaData.default.type)
     }
 
-    func testEC2UInstanceMetaDataClientDefaultHost() {
-        XCTAssertEqual(InstanceMetaDataClient.Host, "http://169.254.169.254")
+    @Test func testEC2UInstanceMetaDataClientDefaultHost() {
+        #expect(InstanceMetaDataClient.Host == "http://169.254.169.254")
     }
 
-    func testEC2RotatingCredentialProviderShutdown() async throws {
-        let testServer = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
+    @Test func testEC2RotatingCredentialProviderShutdown() async throws {
         let customEC2: CredentialProviderFactory = .custom { context in
-            let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
+            let client = InstanceMetaDataClient(httpClient: context.httpClient)
             return RotatingCredentialProvider(context: context, provider: client)
         }
 
-        let client = createAWSClient(credentialProvider: customEC2)
-        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
-        try await client.shutdown()
+        let client = createAWSClient(credentialProvider: customEC2, httpClient: MockHTTPClient.ec2MetadataServer(version: .v2))
+        try await withClient(client) {
+            let credential = try await client.credentialProvider.getCredential(logger: .current)
+            #expect(credential.accessKeyId == MockHTTPClient.EC2InstanceMetaData.default.accessKeyId)
+            #expect(credential.secretAccessKey == MockHTTPClient.EC2InstanceMetaData.default.secretAccessKey)
+            #expect(credential.sessionToken == MockHTTPClient.EC2InstanceMetaData.default.token)
+            #expect(
+                abs(credential.expiration.timeIntervalSinceNow - MockHTTPClient.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow) < 1.0
+            )
+        }
     }
 }

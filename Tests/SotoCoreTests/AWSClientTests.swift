@@ -221,7 +221,7 @@ class AWSClientTests {
 
         // TODO: Re-enable credentials once we have chunked upload testing in the mock client
         let client = createAWSClient(
-            credentialProvider: .empty /*.static(accessKeyId: "key", secretAccessKey: "secret")*/,
+            credentialProvider: .static(accessKeyId: "key", secretAccessKey: "secret"),
             httpClient: mockHTTPClient
         )
         try await withClient(client) {

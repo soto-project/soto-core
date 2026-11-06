@@ -75,10 +75,26 @@ public struct AWSHTTPRequest: Sendable {
 }
 
 extension AWSHTTPRequest {
-    internal init(operation operationName: String, path: String, method: HTTPRequest.Method, configuration: AWSServiceConfig) throws {
+    internal init(
+        operation operationName: String,
+        path: String,
+        method: HTTPRequest.Method,
+        hostPrefix: String? = nil,
+        configuration: AWSServiceConfig
+    ) throws {
         var headers = HTTPFields()
 
-        guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
+        let url: URL?
+        if let hostPrefix {
+            guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(path)"), let host = urlComponents.host else {
+                throw AWSClient.ClientError.invalidURL
+            }
+            urlComponents.host = hostPrefix + host
+            url = urlComponents.url
+        } else {
+            url = URL(string: "\(configuration.endpoint)\(path)")
+        }
+        guard let url else {
             throw AWSClient.ClientError.invalidURL
         }
 

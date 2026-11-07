@@ -20,6 +20,7 @@ import Testing
 
 @testable import SotoCore
 
+@Suite(.serialized)
 struct AWSServiceTests {
     struct TestService: AWSService {
         var client: AWSClient
@@ -200,7 +201,6 @@ struct AWSServiceTests {
         }
     }
 
-    @Suite(.serialized)
     struct EnvironmentVariables {
         @Test func testEnvironmentEndpoint() {
             Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL")

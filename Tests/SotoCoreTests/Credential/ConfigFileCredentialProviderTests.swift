@@ -261,8 +261,4 @@ struct ConfigFileCredentialProviderTests {
         #expect(credentials.accessKeyId == stsCredentials.accessKeyId)
         #expect(credentials.secretAccessKey == stsCredentials.secretAccessKey)
     }
-
-    @Suite(.serialized)
-    struct Serialized {
-    }
 }

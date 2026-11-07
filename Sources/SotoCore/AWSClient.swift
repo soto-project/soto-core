@@ -131,7 +131,7 @@ public final class AWSClient: Sendable {
     deinit {
         assert(
             self.isShutdown.load(ordering: .relaxed),
-            "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed."
+            "AWSClient not shut down before the deinit. Please call `try await client.shutdown()` when no longer needed."
         )
     }
 
@@ -158,6 +158,9 @@ public final class AWSClient: Sendable {
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
     public func syncShutdown() throws {
+        withUnsafeCurrentTask { task in
+            precondition(task == nil, "syncShutdown() can deadlock inside a Task. Use shutdown() instead.")
+        }
         let errorStorage: NIOLockedValueBox<Error?> = .init(nil)
         let semaphore = DispatchSemaphore(value: 0)
         Task {

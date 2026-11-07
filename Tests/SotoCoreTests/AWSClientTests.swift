@@ -33,13 +33,11 @@ import Foundation
 class AWSClientTests: XCTestCase {
     func testGetCredential() async throws {
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "key", secretAccessKey: "secret"))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
 
         let credentialForSignature = try await client.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credentialForSignature.accessKeyId, "key")
         XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+        try await client.shutdown()
     }
 
     func testShutdown() async throws {
@@ -125,12 +123,12 @@ class AWSClientTests: XCTestCase {
     }
 
     func testClientNoInputNoOutput() async throws {
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: TestEnvironment.middlewares)
+            client = createAWSClient(credentialProvider: .empty, middlewares: TestEnvironment.middlewares)
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
             async let responseTask: Void = client.execute(
@@ -150,6 +148,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
     func testClientWithInputNoOutput() async throws {
@@ -162,12 +161,12 @@ class AWSClientTests: XCTestCase {
             let i: [Int64]
         }
 
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: AWSLoggingMiddleware())
+            client = createAWSClient(credentialProvider: .empty, middlewares: AWSLoggingMiddleware())
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let input = Input(e: .second, i: [1, 2, 4, 8])
@@ -192,6 +191,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
     func testClientNoInputWithOutput() async throws {
@@ -199,14 +199,14 @@ class AWSClientTests: XCTestCase {
             let s: String
             let i: Int64
         }
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(
+            client = createAWSClient(
                 credentialProvider: .empty
             )
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
             async let response: Output = client.execute(
@@ -231,6 +231,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
     func testBase64Coding() async throws {
@@ -240,14 +241,14 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape & Decodable {
             let data: AWSBase64Data
         }
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(
+            client = createAWSClient(
                 credentialProvider: .empty
             )
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let input = Input(data: .data(Data("Test base64 data".utf8)))
@@ -274,6 +275,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
@@ -318,13 +320,13 @@ class AWSClientTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
         defer {
             XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
 
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
+        try await client.shutdown()
     }
 
     func testRequestS3Streaming() async throws {
@@ -333,7 +335,6 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClient: httpClient)
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
@@ -347,6 +348,7 @@ class AWSClientTests: XCTestCase {
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 68 * 1024, blockSize: 67 * 1024)
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65537, blockSize: 65537)
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
+        try await client.shutdown()
     }
 
     func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
@@ -367,7 +369,6 @@ class AWSClientTests: XCTestCase {
         defer {
             // ignore error
             try? awsServer.stop()
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         let input = Input(payload: payload)
@@ -379,7 +380,13 @@ class AWSClientTests: XCTestCase {
             input: input,
             logger: TestEnvironment.logger
         )
-        try await responseTask
+        do {
+            try await responseTask
+        } catch {
+            try await client.shutdown()
+            throw error
+        }
+        try await client.shutdown()
     }
 
     func testRequestStreamingTooMuchData() async throws {
@@ -421,7 +428,6 @@ class AWSClientTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
         defer {
             XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
@@ -454,9 +460,11 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testProvideHTTPClient() async {
+    func testProvideHTTPClient() async throws {
+        let client: AWSClient
         do {
             // By default AsyncHTTPClient will follow redirects. This test creates an HTTP client that doesn't follow redirects and
             // provides it to AWSClient
@@ -464,10 +472,9 @@ class AWSClientTests: XCTestCase {
             let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
             async let responseTask: Void = client.execute(
@@ -490,17 +497,18 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testServerError() async {
+    func testServerError() async throws {
+        let client: AWSClient
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .exponential(base: .milliseconds(200)), httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, retryPolicy: .exponential(base: .milliseconds(200)), httpClient: httpClient)
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
             async let responseTask: Void = client.execute(
@@ -532,20 +540,21 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
     func testClientRetry() async throws {
         struct Output: AWSDecodableShape, Encodable {
             let s: String
         }
+        let client: AWSClient
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClient: httpClient)
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
             async let responseTask: Output = client.execute(
@@ -575,9 +584,10 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testCustomRetryPolicy() async {
+    func testCustomRetryPolicy() async throws {
         final class TestRetryPolicy: RetryPolicy {
             static let maxRetries: Int = 3
             let attempt = ManagedAtomic(0)
@@ -591,6 +601,7 @@ class AWSClientTests: XCTestCase {
             }
         }
         let retryPolicy = TestRetryPolicy()
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let serverAddress = awsServer.address
@@ -600,8 +611,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: serverAddress)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClient: httpClient)
-            defer { XCTAssertNoThrow(try client.syncShutdown()) }
+            client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClient: httpClient)
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
@@ -626,20 +636,21 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testClientRetryFail() async {
+    func testClientRetryFail() async throws {
         struct Output: AWSDecodableShape, Encodable {
             let s: String
         }
+        let client: AWSClient
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClient: httpClient)
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
             async let responseTask: Output = client.execute(
@@ -662,17 +673,18 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testClientResponseEventLoop() async {
+    func testClientResponseEventLoop() async throws {
+        let client: AWSClient
         do {
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
                 XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -693,9 +705,10 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 
-    func testStreamingResponse() async {
+    func testStreamingResponse() async throws {
         struct Input: AWSEncodableShape {}
         struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
@@ -713,14 +726,14 @@ class AWSClientTests: XCTestCase {
         var sourceByteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)
         sourceByteBuffer.writeBytes(data)
 
+        let client: AWSClient
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
+            client = createAWSClient(credentialProvider: .empty, httpClient: httpClient)
             defer {
-                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
                 XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -748,6 +761,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
+        try await client.shutdown()
     }
 }
 

@@ -19,15 +19,15 @@ import XCTest
 @testable import SotoCore
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
-    func testSetupFail() async {
+    func testSetupFail() async throws {
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         do {
             _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTFail("Shouldn't get here")
         } catch {
             XCTAssertEqual(error as? CredentialProviderError, CredentialProviderError.noProvider)
         }
+        try await client.shutdown()
     }
 
     func testShutdown() async throws {
@@ -45,7 +45,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
         let client = createAWSClient(credentialProvider: .selector(.environment, .empty))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, accessKeyId)
         XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
@@ -56,6 +55,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
         Environment.unset(name: "AWS_SESSION_TOKEN")
+        try await client.shutdown()
     }
 
     func testEnvironmentProviderFail() async throws {
@@ -63,34 +63,34 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
         let provider: CredentialProviderFactory = .selector(.environment)
         let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         do {
             _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTFail("Should not get here")
         } catch {
             XCTAssertEqual(error as? CredentialProviderError, CredentialProviderError.noProvider)
         }
+        try await client.shutdown()
     }
 
     func testFoundEmptyProvider() async throws {
         let provider: CredentialProviderFactory = .selector(.empty, .environment)
         let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "")
         XCTAssertEqual(credential.secretAccessKey, "")
         XCTAssertEqual(credential.sessionToken, nil)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is EmptyCredential)
+        try await client.shutdown()
     }
 
     func testFoundSelectorWithOneProvider() async throws {
         let provider: CredentialProviderFactory = .selector(.empty)
         let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssert(credential.isEmpty())
         XCTAssert(client.credentialProvider is EmptyCredential)
+        try await client.shutdown()
     }
 
     func testECSProvider() async throws {
@@ -111,7 +111,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         }
         let provider: CredentialProviderFactory = .selector(.environment, customECS, .empty)
         let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
@@ -123,21 +122,22 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.sessionToken, AWSTestServer.ECSMetaData.default.token)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
+        try await client.shutdown()
     }
 
-    func testECSProviderFail() async {
+    func testECSProviderFail() async throws {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
 
         let provider: CredentialProviderFactory = .selector(.ecs)
         let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         do {
             _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTFail("Should not get here")
         } catch {
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
+        try await client.shutdown()
     }
 
     func testEC2Provider() async throws {
@@ -149,7 +149,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         }
 
         let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
@@ -160,6 +159,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.sessionToken, AWSTestServer.EC2InstanceMetaData.default.token)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
+        try await client.shutdown()
     }
 
     func testConfigFileProvider() async throws {
@@ -174,20 +174,20 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
 
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: filename), .empty))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
         XCTAssertEqual(credential.sessionToken, nil)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
+        try await client.shutdown()
     }
 
     func testConfigFileProviderFail() async throws {
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is EmptyCredential)
+        try await client.shutdown()
     }
 }

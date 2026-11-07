@@ -42,7 +42,6 @@ final class TracingTests: XCTestCase {
             credentialProvider: .empty
         )
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         async let response: Void = client.execute(
@@ -76,6 +75,7 @@ final class TracingTests: XCTestCase {
                 "aws.request_id": "test-request-1",
             ]
         )
+        try await client.shutdown()
     }
 }
 

@@ -166,7 +166,6 @@ class AWSServiceTests: XCTestCase {
             }
         }
         let client = createAWSClient(credentialProvider: .empty)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let service = TestService(client: client, config: createServiceConfig())
         let service2 = service.with(middleware: TestMiddleware())
         let request = AWSHTTPRequest(url: URL(string: "http://testurl.com")!, method: .GET, headers: [:], body: .init())
@@ -180,6 +179,7 @@ class AWSServiceTests: XCTestCase {
             .init(status: .ok, headers: request.headers, body: request.body)
         }
         XCTAssertEqual(response.headers["Test"].first, "testWithMiddleware")
+        try await client.shutdown()
     }
 
     func testWithRegion() {
@@ -193,7 +193,6 @@ class AWSServiceTests: XCTestCase {
 
     func testSignURL() async throws {
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
@@ -209,11 +208,11 @@ class AWSServiceTests: XCTestCase {
             }
             .joined(separator: "&")
         XCTAssertEqual(queryItems, "percent=addi%2Btion&space=sp%20ace&test2=true")
+        try await client.shutdown()
     }
 
     func testSignHeaders() async throws {
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
@@ -225,5 +224,6 @@ class AWSServiceTests: XCTestCase {
         )
         // remove signed query params
         XCTAssertNotNil(headers["Authorization"].first)
+        try await client.shutdown()
     }
 }

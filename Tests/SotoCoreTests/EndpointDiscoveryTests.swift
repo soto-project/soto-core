@@ -113,7 +113,6 @@ final class EndpointDiscoveryTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .restjson)
         let client = AWSClient(credentialProvider: .empty)
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
@@ -133,6 +132,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
         try await response2
         XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 1)
+        try await client.shutdown()
     }
 
     func testConcurrentEndpointDiscovery() async throws {
@@ -142,7 +142,6 @@ final class EndpointDiscoveryTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty)
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
@@ -165,6 +164,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         try await response1
         try await response2
         XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 1)
+        try await client.shutdown()
     }
 
     func testDontCacheEndpoint() async throws {
@@ -174,7 +174,6 @@ final class EndpointDiscoveryTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty)
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
@@ -194,6 +193,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
         try await response2
         XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 2)
+        try await client.shutdown()
     }
 
     func testDisableEndpointDiscovery() async throws {
@@ -203,7 +203,6 @@ final class EndpointDiscoveryTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty)
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpoint: awsServer.address)
@@ -219,5 +218,6 @@ final class EndpointDiscoveryTests: XCTestCase {
 
         try await response
         XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 0)
+        try await client.shutdown()
     }
 }

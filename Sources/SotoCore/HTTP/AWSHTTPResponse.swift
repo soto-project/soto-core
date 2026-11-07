@@ -53,7 +53,7 @@ public struct AWSHTTPResponse: Sendable {
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String, serviceProtocol: ServiceProtocol) throws -> Output {
         var payload: ByteBuffer? = nil
-        if case .byteBuffer(let buffer) = self.body.storage {
+        if case .byteBuffer(let buffer) = self.body.storage, !Output._options.contains(.rawPayload) {
             payload = buffer
         }
 

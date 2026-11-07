@@ -12,27 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HTTPTypes
 import NIOCore
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class MiddlewareTests: XCTestCase {
+class MiddlewareTests {
     struct CatchRequestError: Error {
         let request: AWSHTTPRequest
         let context: AWSMiddlewareContext
-    }
-
-    struct CatchRequestMiddleware: AWSMiddlewareProtocol {
-        func handle(
-            _ request: AWSHTTPRequest,
-            context: AWSMiddlewareContext,
-            next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
-        ) async throws -> AWSHTTPResponse {
-            throw CatchRequestError(request: request, context: context)
-        }
     }
 
     func testMiddleware(
@@ -40,29 +31,45 @@ class MiddlewareTests: XCTestCase {
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",
-        test: (AWSHTTPRequest, AWSMiddlewareContext) -> Void
+        test: @escaping @Sendable (AWSHTTPRequest) -> Void
     ) async throws {
-        let client = createAWSClient(credentialProvider: .empty)
-        let config = createServiceConfig(
-            region: .useast1,
-            service: serviceName,
-            middlewares: AWSMiddlewareStack {
-                middleware
-                CatchRequestMiddleware()
-            },
-            options: serviceOptions
+        try await testServiceConfig(
+            createServiceConfig(
+                region: .useast1,
+                service: serviceName,
+                middlewares: middleware,
+                options: serviceOptions
+            ),
+            uri: uri,
+            test: test
         )
-        do {
-            _ = try await client.execute(operation: "test", path: uri, httpMethod: .post, serviceConfig: config, logger: TestEnvironment.logger)
-            XCTFail("Should not get here")
-        } catch {
-            let error = try XCTUnwrap(error as? CatchRequestError)
-            test(error.request, error.context)
-        }
-        try await client.shutdown()
     }
 
-    func testMiddlewareAppliedOnce() async throws {
+    func testServiceConfig(
+        _ serviceConfig: AWSServiceConfig,
+        uri: String = "/",
+        test: @escaping @Sendable (AWSHTTPRequest) -> Void
+    ) async throws {
+        let mockHTTPClient = MockHTTPClient { request in
+            test(request)
+            return .init(response: .init(status: .ok))
+        }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "test",
+                path: uri,
+                httpMethod: .post,
+                serviceConfig: serviceConfig,
+                logger: TestEnvironment.logger
+            )
+        }
+    }
+
+    @Test func testMiddlewareAppliedOnce() async throws {
         struct URLAppendMiddleware: AWSMiddlewareProtocol {
             func handle(
                 _ request: AWSHTTPRequest,
@@ -70,101 +77,79 @@ class MiddlewareTests: XCTestCase {
                 next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
             ) async throws -> AWSHTTPResponse {
                 var request = request
-                request.request.url?.appendPathComponent("test")
+                request.request.url?.appendPathComponent("it")
                 return try await next(request, context)
             }
         }
-
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, middlewares: URLAppendMiddleware())
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
+        try await self.testMiddleware(URLAppendMiddleware(), uri: "/test") { request in
+            #expect(request.request.path == "/test/it")
         }
-
-        async let responseTask: Void = client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: config,
-            logger: TestEnvironment.logger
-        )
-
-        XCTAssertNoThrow(
-            try awsServer.processRaw { request in
-                XCTAssertEqual(request.uri, "/test")
-                return .result(AWSTestServer.Response.ok)
-            }
-        )
-
-        try await responseTask
     }
 
-    func testEditHeaderMiddlewareAddHeader() async throws {
+    @Test func testEditHeaderMiddlewareAddHeader() async throws {
         let testAdd = HTTPField.Name("testAdd")!
         // Test add header
         let middleware = AWSEditHeadersMiddleware(
             .add(name: testAdd, value: "testValue"),
             .add(name: .userAgent, value: "testEditHeaderMiddleware")
         )
-        try await self.testMiddleware(middleware) { request, _ in
-            XCTAssertEqual(request.headers[testAdd], "testValue")
-            XCTAssertEqual(request.headers[.userAgent], "Soto/8.0, testEditHeaderMiddleware")
+        try await self.testMiddleware(middleware) { request in
+            #expect(request.headers[testAdd] == "testValue")
+            #expect(request.headers[.userAgent] == "Soto/8.0, testEditHeaderMiddleware")
         }
     }
 
-    func testEditHeaderMiddlewareReplaceHeader() async throws {
+    @Test func testEditHeaderMiddlewareReplaceHeader() async throws {
         // Test replace header
         let middleware = AWSEditHeadersMiddleware(
             .replace(name: .userAgent, value: "testEditHeaderMiddleware")
         )
-        try await self.testMiddleware(middleware) { request, _ in
-            XCTAssertEqual(request.headers[.userAgent], "testEditHeaderMiddleware")
+        try await self.testMiddleware(middleware) { request in
+            #expect(request.headers[.userAgent] == "testEditHeaderMiddleware")
         }
     }
 
-    func testS3MiddlewareNoBucket() async throws {
+    @Test func testS3MiddlewareNoBucket() async throws {
         // Test virual address
-        try await self.testMiddleware(S3Middleware(), uri: "/") { request, _ in
-            XCTAssertEqual(request.request.url?.absoluteString, "https://service.us-east-1.amazonaws.com/")
+        try await self.testMiddleware(S3Middleware(), uri: "/") { request in
+            #expect(request.request.url?.absoluteString == "https://service.us-east-1.amazonaws.com/")
         }
     }
 
-    func testS3MiddlewareVirtualAddress() async throws {
+    @Test func testS3MiddlewareVirtualAddress() async throws {
         // Test virual address
-        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request, _ in
-            XCTAssertEqual(request.request.url?.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file")
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request in
+            #expect(request.request.url?.absoluteString == "https://bucket.service.us-east-1.amazonaws.com/file")
         }
     }
 
-    func testS3MiddlewareVirtualAddressWithSlash() async throws {
+    @Test func testS3MiddlewareVirtualAddressWithSlash() async throws {
         // Test virual address
-        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file/sdf/") { request, _ in
-            XCTAssertEqual(request.request.url?.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file/sdf/")
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file/sdf/") { request in
+            #expect(request.request.url?.absoluteString == "https://bucket.service.us-east-1.amazonaws.com/file/sdf/")
         }
     }
 
-    func testS3MiddlewareVirtualAddressWithPercentEncoding() async throws {
+    @Test func testS3MiddlewareVirtualAddressWithPercentEncoding() async throws {
         // Test virual address
-        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file%26") { request, _ in
-            XCTAssertEqual(request.request.url?.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file%26")
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file%26") { request in
+            #expect(request.request.url?.absoluteString == "https://bucket.service.us-east-1.amazonaws.com/file%26")
         }
     }
 
-    func testS3MiddlewareAccelerateEndpoint() async throws {
+    @Test func testS3MiddlewareAccelerateEndpoint() async throws {
         // Test virual address
         try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
             serviceOptions: .s3UseTransferAcceleratedEndpoint,
             uri: "/bucket/file"
-        ) { request, _ in
-            XCTAssertEqual(request.request.url?.absoluteString, "https://bucket.s3-accelerate.amazonaws.com/file")
+        ) { request in
+            #expect(request.request.url?.absoluteString == "https://bucket.s3-accelerate.amazonaws.com/file")
         }
     }
 
-    func testS3MiddlewareErrorFixup() async throws {
+    @Test func testS3MiddlewareErrorFixup() async throws {
         struct ThrowNotFoundErrorMiddleware: AWSMiddlewareProtocol {
             public func handle(
                 _ request: AWSHTTPRequest,
@@ -174,85 +159,80 @@ class MiddlewareTests: XCTestCase {
                 throw AWSRawError(rawBody: nil, context: .init(message: "NotFound", response: HTTPResponse(status: .notFound)))
             }
         }
-        let client = createAWSClient(credentialProvider: .empty)
-        let config = createServiceConfig(
-            region: .useast1,
-            endpoint: "https://test.us-east-1.amazonaws.com",
-            errorType: S3TestErrorType.self,
-            middlewares: AWSMiddlewareStack {
-                S3Middleware()
-                ThrowNotFoundErrorMiddleware()
+        // Test virual address
+        let error = await #expect(throws: S3TestErrorType.self) {
+            try await self.testServiceConfig(
+                createServiceConfig(
+                    errorType: S3TestErrorType.self,
+                    middlewares: AWSMiddlewareStack {
+                        S3Middleware()
+                        ThrowNotFoundErrorMiddleware()
+                    }
+                ),
+                uri: "/bucket/file"
+            ) { _ in
             }
-        )
-        do {
-            _ = try await client.execute(operation: "test", path: "/", httpMethod: .post, serviceConfig: config, logger: TestEnvironment.logger)
-            XCTFail("Should not get here")
-        } catch let error as S3TestErrorType where error == .notFound {
-        } catch {
-            XCTFail("Throwing wrong error: \(error)")
         }
-        try await client.shutdown()
+        switch error {
+        case .notFound:
+            break
+        default:
+            Issue.record("Throwing wrong error: \(error)")
+        }
     }
 
-    func testS3MiddlewareAccessPointArn() async throws {
+    @Test func testS3MiddlewareAccessPointArn() async throws {
         // Test virual address
         try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
             serviceOptions: .s3UseTransferAcceleratedEndpoint,
             uri: "/arn:aws:s3:us-west-2:111122223333:accesspoint/test-accesspoint"
-        ) { request, context in
-            XCTAssertEqual(
-                request.request.url?.absoluteString,
-                "https://test-accesspoint-111122223333.s3-accesspoint.us-west-2.amazonaws.com/"
+        ) { request in
+            #expect(
+                request.request.url?.absoluteString == "https://test-accesspoint-111122223333.s3-accesspoint.us-west-2.amazonaws.com/"
             )
-            XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-accesspoint")
-            XCTAssertEqual(context.serviceConfig.region, .uswest2)
         }
     }
 
-    func testS3MiddlewareObjectLambdaArn() async throws {
+    @Test func testS3MiddlewareObjectLambdaArn() async throws {
         // Test virual address
         try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
             serviceOptions: .s3UseTransferAcceleratedEndpoint,
             uri: "/arn:aws:s3-object-lambda:us-west-2:111122223333:accesspoint/tutorial-object-lambda-accesspoint/file"
-        ) { request, context in
-            XCTAssertEqual(
-                request.request.url?.absoluteString,
-                "https://tutorial-object-lambda-accesspoint-111122223333.s3-object-lambda.us-west-2.amazonaws.com/file"
+        ) { request in
+            #expect(
+                request.request.url?.absoluteString
+                    == "https://tutorial-object-lambda-accesspoint-111122223333.s3-object-lambda.us-west-2.amazonaws.com/file"
             )
-            XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-object-lambda")
-            XCTAssertEqual(context.serviceConfig.region, .uswest2)
         }
     }
 
-    func testS3MiddlewareS3ExpressEndpoint() async throws {
+    @Test func testS3MiddlewareS3ExpressEndpoint() async throws {
         // Test virual address
         try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
             uri: "/s3express--bucket--use1-az6--x-s3/file"
-        ) { request, _ in
-            XCTAssertEqual(
-                request.request.url?.absoluteString,
-                "https://s3express--bucket--use1-az6--x-s3.s3express-use1-az6.us-east-1.amazonaws.com/file"
+        ) { request in
+            #expect(
+                request.request.url?.absoluteString == "https://s3express--bucket--use1-az6--x-s3.s3express-use1-az6.us-east-1.amazonaws.com/file"
             )
         }
     }
 
-    func testS3MiddlewareS3ExpressControlEndpoint() async throws {
+    @Test func testS3MiddlewareS3ExpressControlEndpoint() async throws {
         // Test virual address
         try await S3Middleware.$executionContext.withValue(.init(useS3ExpressControlEndpoint: true)) {
             try await self.testMiddleware(
                 S3Middleware(),
                 serviceName: "s3",
                 uri: "/s3express--bucket--use1-az6--x-s3/"
-            ) { request, _ in
-                XCTAssertEqual(
-                    request.request.url?.absoluteString,
-                    "https://s3express-control.us-east-1.amazonaws.com/s3express--bucket--use1-az6--x-s3/"
+            ) { request in
+                #expect(
+                    request.request.url?.absoluteString == "https://s3express-control.us-east-1.amazonaws.com/s3express--bucket--use1-az6--x-s3/"
                 )
             }
         }
@@ -275,7 +255,7 @@ class MiddlewareTests: XCTestCase {
         return data
     }
 
-    func testComputeTreeHash() throws {
+    @Test func testComputeTreeHash() throws {
         //  create buffer full of random data, use the same seeds to ensure we get the same buffer everytime
         let data = self.createRandomBuffer(23, 4, size: 7 * 1024 * 1024 + 258)
 
@@ -286,9 +266,11 @@ class MiddlewareTests: XCTestCase {
         let middleware = TreeHashMiddleware(header: HTTPField.Name("tree-hash")!)
         let treeHash = try middleware.computeTreeHash(byteBuffer)
 
-        XCTAssertEqual(
-            treeHash,
-            [210, 50, 5, 126, 16, 6, 59, 6, 21, 40, 186, 74, 192, 56, 39, 85, 210, 25, 238, 54, 4, 252, 221, 238, 107, 127, 76, 118, 245, 76, 22, 45]
+        #expect(
+            treeHash == [
+                210, 50, 5, 126, 16, 6, 59, 6, 21, 40, 186, 74, 192, 56, 39, 85, 210, 25, 238, 54, 4, 252, 221, 238, 107, 127, 76, 118, 245, 76, 22,
+                45,
+            ]
         )
     }
 

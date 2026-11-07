@@ -40,12 +40,7 @@ struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
         do {
             try await response.collateBody()
         } catch {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                response: response.response
-            )
-            return AWSRawError(rawBody: nil, context: context)
+            return AWSRawResponseError(response: response)
         }
         if let error = response.generateError(
             serviceConfig: context.serviceConfig,
@@ -54,19 +49,7 @@ struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
         ) {
             return error
         } else {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                response: response.response
-            )
-            let responseBody: String?
-            switch response.body.storage {
-            case .byteBuffer(let buffer):
-                responseBody = String(buffer: buffer)
-            default:
-                responseBody = nil
-            }
-            return AWSRawError(rawBody: responseBody, context: context)
+            return AWSRawResponseError(response: response)
         }
     }
 }

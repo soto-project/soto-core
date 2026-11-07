@@ -107,8 +107,4 @@ struct RuntimeSelectorCredentialProviderTests {
             #expect(internalProvider is EmptyCredentialProvider)
         }
     }
-
-    @Suite(.serialized)
-    struct Serialized {
-    }
 }

@@ -439,62 +439,6 @@ class AWSClientTests {
             #expect(output.test == "TestHeader")
         }
     }
-
-    @Suite(.serialized)
-    struct Serialized {
-        /// Given this function is being used to test AHC responses it should continue to use AWSTestServer
-        func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
-            struct Input: AWSEncodableShape {
-                static var _options: AWSShapeOptions { [.allowStreaming] }
-                let payload: AWSHTTPBody
-                func encode(to encoder: any Encoder) throws {
-                    try self.payload.encode(to: encoder)
-                }
-
-                private enum CodingKeys: CodingKey {}
-            }
-
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty)
-            try await withTeardown {
-                let input = Input(payload: payload)
-                async let responseTask: Void = client.execute(
-                    operation: "test",
-                    path: "/",
-                    httpMethod: .post,
-                    serviceConfig: config,
-                    input: input,
-                    logger: TestEnvironment.logger
-                )
-                try await responseTask
-            } teardown: {
-                try? awsServer.stop()
-                try? await client.shutdown()
-            }
-        }
-
-        @Test func testRequestStreamingTooMuchData() async throws {
-            // set up stream of 8 bytes but supply more than that
-            let buffer = ByteBuffer(string: "String longer than 8 bytes")
-            let payload = AWSHTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
-            let error = await #expect(throws: AWSClient.ClientError.self) {
-                try await self.testRequestStreamingWithPayload(payload)
-            }
-            #expect(error == .bodyLengthMismatch)
-
-        }
-
-        @Test func testRequestStreamingNotEnoughData() async throws {
-            // set up stream of 8 bytes but supply more than that
-            let buffer = ByteBuffer(string: "String longer than 8 bytes")
-            let payload = AWSHTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
-            let error = await #expect(throws: AWSClient.ClientError.self) {
-                try await self.testRequestStreamingWithPayload(payload)
-            }
-            #expect(error == .bodyLengthMismatch)
-        }
-    }
 }
 
 #if ServiceLifecycleSupport

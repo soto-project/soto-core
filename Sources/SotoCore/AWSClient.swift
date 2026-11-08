@@ -159,7 +159,9 @@ public final class AWSClient: Sendable {
     @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
     public func syncShutdown() throws {
         withUnsafeCurrentTask { task in
-            precondition(task == nil, "syncShutdown() can deadlock inside a Task. Use shutdown() instead.")
+            if task != nil {
+                self.logger.warning("syncShutdown() called from inside a Task, which can deadlock. Use shutdown() instead.")
+            }
         }
         let errorStorage: NIOLockedValueBox<Error?> = .init(nil)
         let semaphore = DispatchSemaphore(value: 0)

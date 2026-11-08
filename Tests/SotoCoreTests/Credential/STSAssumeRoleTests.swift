@@ -42,6 +42,7 @@ class STSAssumeRoleTests: XCTestCase {
             ),
             logger: TestEnvironment.logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertNoThrow(
             try testServer.processRaw { _ in
@@ -57,7 +58,6 @@ class STSAssumeRoleTests: XCTestCase {
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
         XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)
-        try await client.shutdown()
     }
 
     func testSTSAssumeRoleEnvironmentVariables() async throws {
@@ -82,6 +82,7 @@ class STSAssumeRoleTests: XCTestCase {
                 credentialProvider: .environment(endpoint: testServer.address),
                 logger: TestEnvironment.logger
             )
+            defer { XCTAssertNoThrow(try client.syncShutdown()) }
             async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTAssertNoThrow(
                 try testServer.processRaw { request in
@@ -103,7 +104,6 @@ class STSAssumeRoleTests: XCTestCase {
             let credential = try await credentialTask
             let stsCredentials = try XCTUnwrap(credential as? STSCredentials)
             XCTAssertEqual(stsCredentials.sessionToken, "WebIdentityToken=TestThis")
-            try await client.shutdown()
         } teardown: {
             _ = try? await fileSystem.removeItem(at: .init("temp_webidentity_token"))
         }
@@ -122,11 +122,11 @@ class STSAssumeRoleTests: XCTestCase {
             credentialProvider: .environment(),
             logger: TestEnvironment.logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         do {
             _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTFail("Get credential should fail as token id file does not exist")
         } catch let error as CredentialProviderError where error == .tokenIdFileFailedToLoad {}
-        try await client.shutdown()
     }
 }
 

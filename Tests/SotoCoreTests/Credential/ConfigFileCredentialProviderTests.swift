@@ -324,6 +324,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             },
             httpClient: httpClient
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         // Retrieve credentials
         async let futureCredentials: Credential = client.credentialProvider.getCredential(
@@ -342,6 +343,5 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         // Verify credentials match those returned from STS Assume Role operation
         XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
         XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
-        try await client.shutdown()
     }
 }

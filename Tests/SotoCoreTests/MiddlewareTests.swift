@@ -77,6 +77,7 @@ class MiddlewareTests: XCTestCase {
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, middlewares: URLAppendMiddleware())
         defer {
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
 
@@ -96,7 +97,6 @@ class MiddlewareTests: XCTestCase {
         )
 
         try await responseTask
-        try await client.shutdown()
     }
 
     func testEditHeaderMiddlewareAddHeader() async throws {

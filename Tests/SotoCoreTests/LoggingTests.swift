@@ -31,6 +31,7 @@ class LoggingTests: XCTestCase {
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address
@@ -59,7 +60,6 @@ class LoggingTests: XCTestCase {
         XCTAssertNotNil(requestId1)
         XCTAssertNotNil(requestId2)
         XCTAssertNotEqual(requestId1, requestId2)
-        try await client.shutdown()
     }
 
     func testAWSRequestResponse() async throws {
@@ -73,6 +73,7 @@ class LoggingTests: XCTestCase {
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1"),
@@ -104,7 +105,6 @@ class LoggingTests: XCTestCase {
         XCTAssertEqual(responseEntry?.level, .trace)
         XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
         XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
-        try await client.shutdown()
     }
 
     func testAWSError() async throws {
@@ -118,6 +118,7 @@ class LoggingTests: XCTestCase {
             options: .init(requestLogLevel: .debug, errorLogLevel: .info),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address
@@ -134,7 +135,6 @@ class LoggingTests: XCTestCase {
         try? await responseTask
         XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
         XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
-        try await client.shutdown()
     }
 
     func testRetryRequest() async throws {
@@ -147,6 +147,7 @@ class LoggingTests: XCTestCase {
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address
@@ -170,7 +171,6 @@ class LoggingTests: XCTestCase {
         try await responseTask
         XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
         XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
-        try await client.shutdown()
     }
 
     func testNoCredentialProvider() async throws {
@@ -178,6 +178,7 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         do {
             try await client.execute(
@@ -189,7 +190,6 @@ class LoggingTests: XCTestCase {
             )
         } catch {}
         XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
-        try await client.shutdown()
     }
 
     func testRequestLogLevel() async throws {
@@ -204,6 +204,7 @@ class LoggingTests: XCTestCase {
             options: .init(requestLogLevel: .trace),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1"),
@@ -227,7 +228,6 @@ class LoggingTests: XCTestCase {
         try await responseTask
         let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
         XCTAssertEqual(requestEntry.level, .trace)
-        try await client.shutdown()
     }
 
     func testLoggingMiddleware() async throws {
@@ -245,6 +245,7 @@ class LoggingTests: XCTestCase {
             middleware: AWSLoggingMiddleware(logger: logger, logLevel: .info),
             logger: logger
         )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1"),
@@ -271,6 +272,5 @@ class LoggingTests: XCTestCase {
         _ = try await responseTask
         XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
         XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
-        try await client.shutdown()
     }
 }

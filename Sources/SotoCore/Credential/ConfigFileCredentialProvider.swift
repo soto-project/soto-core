@@ -127,7 +127,7 @@ struct ProfileScopedCredentialProvider: CredentialProvider {
 
     var description: String { "\(inner) (profile: \(profile))" }
 
-    func getCredential(logger: Logger) async throws -> any Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         do {
             return try await self.inner.getCredential(logger: logger)
         } catch {

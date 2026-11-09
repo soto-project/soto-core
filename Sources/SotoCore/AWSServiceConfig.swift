@@ -106,6 +106,8 @@ public final class AWSServiceConfig {
             partition = region.partition
         } else if let partitionEndpoint = partitionEndpoints[partition] {
             self.region = partitionEndpoint.region
+        } else if let region = Environment["AWS_REGION"] {
+            self.region = Region(rawValue: region)
         } else if let defaultRegion = Environment["AWS_DEFAULT_REGION"] {
             self.region = Region(rawValue: defaultRegion)
         } else {

@@ -54,7 +54,7 @@ extension AWSClient {
             self.outputKey = outputKey
             self.inputKey = inputKey
             self.moreResultsKey = moreResultsKey
-            self.logger = AWSClient.loggingDisabled
+            self.logger = logger
         }
 
         /// Iterator for iterating over `PaginatorSequence`

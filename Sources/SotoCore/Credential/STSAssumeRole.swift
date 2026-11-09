@@ -215,7 +215,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func getCredential(logger: Logger) async throws -> any Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         let credentials: STSCredentials?
         switch self.request {
         case .assumeRole(let arn, let sessioName):

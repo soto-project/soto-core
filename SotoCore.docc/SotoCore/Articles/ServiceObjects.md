@@ -26,7 +26,7 @@ The client is the `AWSClient` this service object will use when communicating wi
 
 #### Region and Partition
 
-The `region` defines which AWS region you want to use for that service. The `partition` defines which set of AWS server regions you want to work with. Partitions include the standard `.aws`, US government `.awsusgov` and China `.awscn`. If you provide a `region`, the `partition` parameter is ignored. If you don't supply a `region` then the `region` will be set as the default region for the specified `partition`, if that is not defined it will check the `AWS_DEFAULT_REGION` environment variable or default to `us-east-1`.
+The `region` defines which AWS region you want to use for that service. The `partition` defines which set of AWS server regions you want to work with. Partitions include the standard `.aws`, US government `.awsusgov` and China `.awscn`. If you provide a `region`, the `partition` parameter is ignored. If you don't supply a `region` then the `region` will be set as the default region for the specified `partition`, if that is not defined it will check the `AWS_REGION` and then `AWS_DEFAULT_REGION` environment variables or default to `us-east-1`.
 
 Some services do not have a `region` parameter in their initializer, such as IAM. These services require you to communicate with one global region which is defined by the service. You can still control which partition you connect to though.
 

@@ -82,8 +82,11 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 
 @nonexhaustive
 public enum HTTP1TypeConversionError: Error {
+    /// Failed to create HTTPRequest.Method from HTTPMethod
     case invalidMethod
+    /// Failed to extract a path from HTTPRequest
     case missingPath
+    /// HTTPResponseHead had an invalid status code
     case invalidStatusCode
 }
 

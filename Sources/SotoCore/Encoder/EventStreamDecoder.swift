@@ -297,11 +297,17 @@ extension CodingUserInfoKey {
 public struct AWSEventStreamError: Error {
     @nonexhaustive
     public enum Code: Sendable {
+        /// The message headers are corrupt
         case corruptHeader
+        /// An event stream message headers is missing
         case missingHeader
+        /// The message payload is corrupt
         case corruptPayload
+        /// The message was an error
         case errorMessage
+        /// Unsupported content type
         case unsupportedContentType
+        /// Unknown message type
         case unknownMessageType
     }
     public let code: Code

@@ -188,12 +188,19 @@ public final class AWSClient: Sendable {
     /// Errors returned by `AWSClient` code
     @nonexhaustive
     public enum ClientError: Error, Equatable {
+        /// client has already been shutdown
         case alreadyShutdown
+        /// URL provided to client is invalid
         case invalidURL
+        /// Data supplied to the Request does not equal length indicated
         case bodyLengthMismatch
+        /// Waiter failed, but without an error. ie a successful api call was an error
         case waiterFailed
+        /// Waiter failed to complete in time alloted
         case waiterTimeout
+        /// Failed to access payload while building request
         case failedToAccessPayload
+        /// ARN provided to client is invalid
         case invalidARN(String)
     }
 

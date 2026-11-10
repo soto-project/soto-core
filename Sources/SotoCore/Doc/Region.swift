@@ -181,13 +181,21 @@ extension Region: Codable {}
 /// Enumeration for all AWS partitions
 @nonexhaustive
 public enum AWSPartition: String, Sendable {
+    /// AWS Standard
     case aws
+    /// AWS China
     case awscn
+    /// AWS GovCloud (US)
     case awsusgov
+    /// AWS ISO (US)
     case awsiso
+    /// AWS ISOB (US)
     case awsisob
+    /// AWS ISOE (Europe)
     case awsisoe
+    /// AWS ISOF
     case awsisof
+    /// AWS EUSC
     case awseusc
 }
 

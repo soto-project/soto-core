@@ -15,7 +15,10 @@
 /// Errors that can occur during CloudFront signing operations
 @nonexhaustive
 public enum CloudFrontSignerError: Error {
+    /// The provided PEM/DER data could not be parsed as an RSA private key
     case invalidPrivateKey
+    /// The URL string is not valid
     case invalidURL
+    /// The signing operation failed
     case signingFailed
 }

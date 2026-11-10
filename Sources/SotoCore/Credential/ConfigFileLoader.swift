@@ -94,10 +94,15 @@ enum ConfigFileLoader {
     /// - missingSecretAccessKey: If the secret access key was not found
     @nonexhaustive
     public enum ConfigFileError: Error, Equatable {
+        /// Credentials or profile ini file does not exist
         case fileDoesNotExist
+        /// Credentials or profile ini file failed to load
         case invalidINIFile
+        /// Cannot find profile in ini file
         case missingProfile
+        /// access key id is missing from credentials file
         case missingAccessKeyId
+        /// secret access key id missing from credentials file
         case missingSecretAccessKey
     }
     // MARK: - File IO

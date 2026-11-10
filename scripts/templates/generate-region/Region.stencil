@@ -51,6 +51,7 @@ extension Region: Codable {}
 @nonexhaustive
 public enum AWSPartition: String, Sendable {
 {%for partition in partitions %}
+    /// {{partition.description}}
     case {{partition.name}}
 {%endfor %}
 }

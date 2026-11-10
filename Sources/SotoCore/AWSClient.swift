@@ -194,7 +194,7 @@ public final class AWSClient: Sendable {
         case waiterFailed
         case waiterTimeout
         case failedToAccessPayload
-        case invalidARN
+        case invalidARN(String)
     }
 
     /// Additional options
@@ -569,8 +569,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "Waiter failed to complete in time allocated"
         case .failedToAccessPayload:
             return "Failed to access payload while building request for AWS"
-        case .invalidARN:
-            return "ARN provided to the client was invalid"
+        case .invalidARN(let arn):
+            return "ARN (\(arn)) provided to the client was invalid"
         }
     }
 }

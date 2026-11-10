@@ -187,7 +187,7 @@ public final class AWSClient: Sendable {
 
     /// Errors returned by `AWSClient` code
     @nonexhaustive
-    public enum ClientError: Error {
+    public enum ClientError: Error, Equatable {
         case alreadyShutdown
         case invalidURL
         case bodyLengthMismatch

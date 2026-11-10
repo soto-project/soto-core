@@ -173,7 +173,7 @@ class MiddlewareTests {
             ) { _ in
             }
         }
-        switch error {
+        switch error?.error {
         case .notFound:
             break
         default:

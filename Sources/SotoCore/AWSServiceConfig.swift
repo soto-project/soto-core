@@ -39,7 +39,7 @@ public final class AWSServiceConfig {
     /// The url to use in requests
     public let endpoint: String
     /// An array of the possible error types returned by the service
-    public let errorType: (any AWSErrorType.Type)?
+    public let errorType: (any (AWSErrorType & Decodable).Type)?
     /// XML namespace to be applied to all request objects
     public let xmlNamespace: String?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
@@ -93,7 +93,7 @@ public final class AWSServiceConfig {
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         variantEndpoints: [EndpointVariantType: EndpointVariant] = [:],
-        errorType: (any AWSErrorType.Type)? = nil,
+        errorType: (any (AWSErrorType & Decodable).Type)? = nil,
         xmlNamespace: String? = nil,
         middleware: (any AWSMiddlewareProtocol)? = nil,
         timeout: Duration? = nil,

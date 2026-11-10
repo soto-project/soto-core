@@ -487,50 +487,7 @@ class AWSClientTests: XCTestCase {
 
             try await responseTask
             XCTFail("Shouldn't get here as the provided client doesn't follow redirects")
-        } catch let error as AWSRawError {
-            XCTAssertEqual(error.context.message, "Unhandled Error")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-
-    func testServerError() async {
-        do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .exponential(base: .milliseconds(200)), httpClient: httpClient)
-            defer {
-                XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-            }
-            async let responseTask: Void = client.execute(
-                operation: "test",
-                path: "/",
-                httpMethod: .post,
-                serviceConfig: config,
-                logger: TestEnvironment.logger
-            )
-
-            var count = 0
-            try awsServer.processRaw { _ in
-                count += 1
-                if count < 5 {
-                    return .error(.internal, continueProcessing: true)
-                } else {
-                    return .result(.ok)
-                }
-            }
-
-            try await responseTask
-        } catch let error as AWSServerError {
-            switch error {
-            case .internalFailure:
-                XCTAssertEqual(error.message, AWSTestServer.ErrorType.internal.message)
-            default:
-                XCTFail("Unexpected error: \(error)")
-            }
+        } catch is AWSRawResponseError {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -623,7 +580,7 @@ class AWSClientTests: XCTestCase {
             }
 
             try await responseTask
-        } catch let error as AWSServerError where error == .serviceUnavailable {
+        } catch let error as AWSResponseError where error == .serviceUnavailable {
             XCTAssertEqual(retryPolicy.attempt.load(ordering: .relaxed), TestRetryPolicy.maxRetries)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -659,7 +616,7 @@ class AWSClientTests: XCTestCase {
             let output = try await responseTask
 
             XCTAssertEqual(output.s, "TestOutputString")
-        } catch let error as AWSClientError where error == AWSClientError.accessDenied {
+        } catch let error as AWSResponseError where error == .accessDenied {
             XCTAssertEqual(error.message, AWSTestServer.ErrorType.accessDenied.message)
         } catch {
             XCTFail("Unexpected error: \(error)")

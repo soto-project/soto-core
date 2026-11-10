@@ -65,7 +65,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
                     self.getBucketLocationResponseFixup(response: &response)
                 }
                 return response
-            } catch let error as AWSRawError {
+            } catch let error as AWSRawResponseError {
                 let newError = self.fixupRawError(error: error, context: context)
                 throw newError
             }
@@ -321,11 +321,11 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         }
     }
 
-    func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> any Error {
-        if error.context.response.status == .notFound {
-            if let errorType = context.serviceConfig.errorType,
-                let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
-            {
+    func fixupRawError(error: AWSRawResponseError, context: AWSMiddlewareContext) -> any Error {
+        if error.response.status == .notFound {
+            let xml = "<Error><Code>NotFound</Code></Error>"
+            let response = AWSHTTPResponse(response: error.response.response, body: .init(string: xml))
+            if let notFoundError = response.generateError(serviceConfig: context.serviceConfig, logger: context.logger) {
                 return notFoundError
             }
         }

@@ -20,9 +20,9 @@ import SotoSignerV4
 internal import SotoXML
 
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS

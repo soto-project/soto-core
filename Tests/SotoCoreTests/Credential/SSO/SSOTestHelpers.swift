@@ -110,7 +110,7 @@ extension SSOCredentialProviderTests {
         accessKeyId: String = "AKIATEST123",
         secretAccessKey: String = "testsecret",
         sessionToken: String = "testsession"
-    ) -> (HTTPResponse.Status, Data) {
+    ) -> AWSHTTPResponse {
         let json = """
             {
                 "roleCredentials": {
@@ -121,14 +121,14 @@ extension SSOCredentialProviderTests {
                 }
             }
             """
-        return (.ok, json.data(using: .utf8)!)
+        return .init(response: .init(status: .ok), body: .init(string: json))
     }
 
     /// Build a successful SSO-OIDC CreateToken refresh response
     func makeCreateTokenResponse(
         accessToken: String = "refreshed-access-token",
         refreshToken: String = "new-refresh-token"
-    ) -> (HTTPResponse.Status, Data) {
+    ) -> AWSHTTPResponse {
         let json = """
             {
                 "accessToken": "\(accessToken)",
@@ -137,7 +137,7 @@ extension SSOCredentialProviderTests {
                 "refreshToken": "\(refreshToken)"
             }
             """
-        return (.ok, json.data(using: .utf8)!)
+        return .init(response: .init(status: .ok), body: .init(string: json))
     }
 }
 

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HTTPTypes
 import InMemoryLogging
 import Logging
@@ -20,221 +21,178 @@ import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import SotoTestUtils
-import XCTest
+import Synchronization
+import Testing
 
 @testable import SotoCore
 
-class LoggingTests: XCTestCase {
-    func testRequestIdIncrements() async throws {
+struct LoggingTests {
+    @Test func testRequestIdIncrements() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
+
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
-        )
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
-        async let response2Task: Void = client.execute(operation: "test2", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try await client.execute(operation: "test2", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        var count = 0
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
-                    .result(.ok, continueProcessing: true),
-                    .result(.ok, continueProcessing: false),
-                ]
-                let result = results[count]
-                count += 1
-                return result
-            }
-        )
-
-        try await responseTask
-        try await response2Task
-        let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
-        let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
-        XCTAssertNotNil(requestId1)
-        XCTAssertNotNil(requestId2)
-        XCTAssertNotEqual(requestId1, requestId2)
+            let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
+            let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
+            #expect(requestId1 != nil)
+            #expect(requestId2 != nil)
+            #expect(requestId1 != requestId2)
+        }
     }
 
-    func testAWSRequestResponse() async throws {
+    @Test func testAWSRequestResponse() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let traceLogger = logger
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
+            serviceProtocol: .json(version: "1.1")
         )
 
-        async let responseTask: Void = client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: traceLogger
-        )
-
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                .result(.ok, continueProcessing: false)
-            }
-        )
-
-        try await responseTask
-        let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
-        XCTAssertNotNil(requestEntry)
-        XCTAssertEqual(requestEntry?.level, .debug)
-        XCTAssertEqual(requestEntry?.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(requestEntry?.metadata["aws-service"], "test-service")
-        let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
-        XCTAssertNotNil(responseEntry)
-        XCTAssertEqual(responseEntry?.level, .trace)
-        XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: logger
+            )
+            let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
+            #expect(requestEntry != nil)
+            #expect(requestEntry?.level == .debug)
+            #expect(requestEntry?.metadata["aws-operation"] == "TestOperation")
+            #expect(requestEntry?.metadata["aws-service"] == "test-service")
+            let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
+            #expect(responseEntry != nil)
+            #expect(responseEntry?.level == .trace)
+            #expect(responseEntry?.metadata["aws-operation"] == "TestOperation")
+            #expect(responseEntry?.metadata["aws-service"] == "test-service")
+        }
     }
 
-    func testAWSError() async throws {
+    @Test func testAWSError() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
+        let mockHTTPClient = MockHTTPClient { request in
+            MockHTTPClient.AWSError(status: .unauthorized, code: "AccessDenied").response(for: .json(version: "1.1"))
+        }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(requestLogLevel: .debug, errorLogLevel: .info),
+            httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
-        )
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try? await client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                .error(.accessDenied, continueProcessing: false)
-            }
-        )
-
-        try? await responseTask
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message == "AWS Error")
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level == .info)
+        }
     }
 
-    func testRetryRequest() async throws {
+    @Test func testRetryRequest() async throws {
+        struct TestError: Error {}
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
+        let count = Atomic(0)
+        let mockHTTPClient = MockHTTPClient { request in
+            let (value, _) = count.add(1, ordering: .relaxed)
+            if value == 0 {
+                throw TestError()
+            } else {
+                return .init(response: .init(status: .ok))
+            }
+        }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
-        )
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        var count = 0
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
-                    .error(.internal, continueProcessing: true),
-                    .result(.ok, continueProcessing: false),
-                ]
-                let result = results[count]
-                count += 1
-                return result
-            }
-        )
-
-        try await responseTask
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message == "Retrying request")
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level == .trace)
+        }
     }
 
-    func testNoCredentialProvider() async throws {
+    @Test func testNoCredentialProvider() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
-        do {
-            try await client.execute(
-                operation: "Test",
-                path: "/",
-                httpMethod: .get,
-                serviceConfig: serviceConfig,
-                logger: logger
-            )
-        } catch {}
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
+        try await withClient(client) {
+            do {
+                try await client.execute(
+                    operation: "Test",
+                    path: "/",
+                    httpMethod: .get,
+                    serviceConfig: serviceConfig,
+                    logger: logger
+                )
+            } catch {}
+            #expect(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." } != nil)
+        }
     }
 
-    func testRequestLogLevel() async throws {
+    @Test func testRequestLogLevel() async throws {
         let inMemoryLogging = InMemoryLogHandler()
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
-        let traceLogger = logger
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(requestLogLevel: .trace),
+            httpClient: MockHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
+            serviceProtocol: .json(version: "1.1")
         )
 
-        async let responseTask: Void = client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: traceLogger
-        )
-
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                .result(.ok, continueProcessing: false)
-            }
-        )
-
-        try await responseTask
-        let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
-        XCTAssertEqual(requestEntry.level, .trace)
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: logger
+            )
+            let requestEntry = try #require(inMemoryLogging.entries.first { $0.message == "AWS Request" })
+            #expect(requestEntry.level == .trace)
+        }
     }
 
-    func testLoggingMiddleware() async throws {
+    @Test func testLoggingMiddleware() async throws {
         struct Output: AWSDecodableShape & Encodable {
             let s: String
         }
@@ -242,39 +200,33 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let traceLogger = logger
-        let server = AWSTestServer(serviceProtocol: .json)
-        defer { XCTAssertNoThrow(try server.stop()) }
+        let mockHTTPClient = MockHTTPClient { request in
+            let output = Output(s: "TestOutputString")
+            let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+            return .init(response: .init(status: .ok), body: .init(buffer: byteBuffer))
+        }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             middleware: AWSLoggingMiddleware(logger: logger, logLevel: .info),
+            httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
         let config = createServiceConfig(
             service: "test-service",
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: server.address
+            serviceProtocol: .json(version: "1.1")
         )
 
-        async let responseTask: Output = client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: traceLogger
-        )
-
-        XCTAssertNoThrow(
-            try server.processRaw { _ in
-                let output = Output(s: "TestOutputString")
-                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return .result(response)
-            }
-        )
-
-        _ = try await responseTask
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
+        try await withClient(client) {
+            let _: Output = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: traceLogger
+            )
+            #expect(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") } != nil)
+            #expect(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") } != nil)
+        }
     }
 }

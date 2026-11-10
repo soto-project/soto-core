@@ -48,35 +48,16 @@ extension Region: CustomStringConvertible {
 extension Region: Codable {}
 
 /// Enumeration for all AWS partitions
-public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
-    enum InternalPartition: String {
+@nonexhaustive
+public enum AWSPartition: String, Sendable {
 {%for partition in partitions %}
-        case {{partition.name}}
-{%endfor %}
-    }
-
-    private var partition: InternalPartition
-
-    public var rawValue: String { self.partition.rawValue }
-
-    public init?(rawValue: String) {
-        guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
-        self.partition = partition
-    }
-
-    private init(partition: InternalPartition) {
-        self.partition = partition
-    }
-
-{%for partition in partitions %}
-    // {{partition.description}}
-    public static var {{partition.name}}: AWSPartition { .init(partition: .{{partition.name}}) }
+    case {{partition.name}}
 {%endfor %}
 }
 
 extension AWSPartition {
     public var dnsSuffix: String {
-        switch self.partition {
+        switch self {
 {%for partition in partitions %}
         case .{{partition.name}}: return "{{partition.dnsSuffix}}"
 {%endfor %}
@@ -84,7 +65,7 @@ extension AWSPartition {
     }
 
     public func defaultEndpoint(region: Region, service: String) -> String {
-        switch self.partition {
+        switch self {
 {%for partition in partitions %}
         case .{{partition.name}}: return "{{partition.hostname}}"
 {%endfor %}

@@ -126,27 +126,17 @@ private struct CredentialProcessOutput: Decodable, Sendable {
     }
 }
 
-public struct CredentialProcessError: Error, Equatable, CustomStringConvertible {
-    enum Internal: Equatable {
-        case commandEmpty
-        case processExitedDueToSignal(Int32)
-        case processExitedWithError(Int32)
-        case invalidVersion(Int)
-        case failedToDecodeOutput
-        case invalidExpiration
-    }
-
-    let value: Internal
-
-    public static var commandEmpty: Self { .init(value: .commandEmpty) }
-    public static func processExitedWithError(_ code: Int32) -> Self { .init(value: .processExitedWithError(code)) }
-    public static func processExitedDueToSignal(_ code: Int32) -> Self { .init(value: .processExitedDueToSignal(code)) }
-    public static func invalidVersion(_ version: Int) -> Self { .init(value: .invalidVersion(version)) }
-    public static var failedToDecodeOutput: Self { .init(value: .failedToDecodeOutput) }
-    public static var invalidExpiration: Self { .init(value: .invalidExpiration) }
+@nonexhaustive
+public enum CredentialProcessError: Error, Equatable, CustomStringConvertible {
+    case commandEmpty
+    case processExitedDueToSignal(Int32)
+    case processExitedWithError(Int32)
+    case invalidVersion(Int)
+    case failedToDecodeOutput
+    case invalidExpiration
 
     public var description: String {
-        switch value {
+        switch self {
         case .commandEmpty:
             "credential_process command is empty"
         case .processExitedWithError(let code):

@@ -163,6 +163,7 @@ class MiddlewareTests {
         let error = await #expect(throws: S3TestErrorType.self) {
             try await self.testServiceConfig(
                 createServiceConfig(
+                    serviceProtocol: .restxml,
                     errorType: S3TestErrorType.self,
                     middlewares: AWSMiddlewareStack {
                         S3Middleware()

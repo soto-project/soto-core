@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import HTTPTypes
+public import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -40,7 +40,8 @@ protocol MetadataClient: CredentialProvider {
     func getMetaData(logger: Logger) async throws -> MetaData
 }
 
-enum MetaDataClientError: Error {
+@nonexhaustive
+public enum MetaDataClientError: Error {
     case failedToDecode(underlyingError: any Error)
     case unexpectedTokenResponseStatus(status: HTTPResponse.Status)
     case couldNotReadTokenFromResponse

@@ -92,26 +92,18 @@ enum ConfigFileLoader {
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    public struct ConfigFileError: Error, Equatable {
-        enum Internal: Equatable {
-            case fileDoesNotExist
-            case invalidINIFile
-            case missingProfile
-            case missingAccessKeyId
-            case missingSecretAccessKey
-        }
-        let value: Internal
-
+    @nonexhaustive
+    public enum ConfigFileError: Error, Equatable {
         /// Credentials or profile ini file does not exist
-        public static var fileDoesNotExist: Self { .init(value: .fileDoesNotExist) }
+        case fileDoesNotExist
         /// Credentials or profile ini file failed to load
-        public static var invalidINIFile: Self { .init(value: .invalidINIFile) }
+        case invalidINIFile
         /// Cannot find profile in ini file
-        public static var missingProfile: Self { .init(value: .missingProfile) }
+        case missingProfile
         /// access key id is missing from credentials file
-        public static var missingAccessKeyId: Self { .init(value: .missingAccessKeyId) }
+        case missingAccessKeyId
         /// secret access key id missing from credentials file
-        public static var missingSecretAccessKey: Self { .init(value: .missingSecretAccessKey) }
+        case missingSecretAccessKey
     }
     // MARK: - File IO
 

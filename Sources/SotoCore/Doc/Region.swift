@@ -179,52 +179,29 @@ extension Region: CustomStringConvertible {
 extension Region: Codable {}
 
 /// Enumeration for all AWS partitions
-public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
-    enum InternalPartition: String {
-        case aws
-        case awscn
-        case awsusgov
-        case awsiso
-        case awsisob
-        case awsisoe
-        case awsisof
-        case awseusc
-    }
-
-    private var partition: InternalPartition
-
-    public var rawValue: String { self.partition.rawValue }
-
-    public init?(rawValue: String) {
-        guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
-        self.partition = partition
-    }
-
-    private init(partition: InternalPartition) {
-        self.partition = partition
-    }
-
-    // AWS Standard
-    public static var aws: AWSPartition { .init(partition: .aws) }
-    // AWS China
-    public static var awscn: AWSPartition { .init(partition: .awscn) }
-    // AWS GovCloud (US)
-    public static var awsusgov: AWSPartition { .init(partition: .awsusgov) }
-    // AWS ISO (US)
-    public static var awsiso: AWSPartition { .init(partition: .awsiso) }
-    // AWS ISOB (US)
-    public static var awsisob: AWSPartition { .init(partition: .awsisob) }
-    // AWS ISOE (Europe)
-    public static var awsisoe: AWSPartition { .init(partition: .awsisoe) }
-    // AWS ISOF
-    public static var awsisof: AWSPartition { .init(partition: .awsisof) }
-    // AWS EUSC
-    public static var awseusc: AWSPartition { .init(partition: .awseusc) }
+@nonexhaustive
+public enum AWSPartition: String, Sendable {
+    /// AWS Standard
+    case aws
+    /// AWS China
+    case awscn
+    /// AWS GovCloud (US)
+    case awsusgov
+    /// AWS ISO (US)
+    case awsiso
+    /// AWS ISOB (US)
+    case awsisob
+    /// AWS ISOE (Europe)
+    case awsisoe
+    /// AWS ISOF
+    case awsisof
+    /// AWS EUSC
+    case awseusc
 }
 
 extension AWSPartition {
     public var dnsSuffix: String {
-        switch self.partition {
+        switch self {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
         case .awsusgov: return "amazonaws.com"
@@ -237,7 +214,7 @@ extension AWSPartition {
     }
 
     public func defaultEndpoint(region: Region, service: String) -> String {
-        switch self.partition {
+        switch self {
         case .aws: return "\(service).\(region).amazonaws.com"
         case .awscn: return "\(service).\(region).amazonaws.com.cn"
         case .awsusgov: return "\(service).\(region).amazonaws.com"

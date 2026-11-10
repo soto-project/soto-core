@@ -295,30 +295,20 @@ extension CodingUserInfoKey {
 
 /// Errors thrown while decoding the event stream buffers
 public struct AWSEventStreamError: Error {
-    public struct Code: Sendable {
-        enum _Internal {
-            case corruptHeader
-            case missingHeader
-            case corruptPayload
-            case errorMessage
-            case unsupportedContentType
-            case unknownMessageType
-        }
-
-        private let value: _Internal
-
+    @nonexhaustive
+    public enum Code: Sendable {
         /// The message headers are corrupt
-        public static var corruptHeader: Self { .init(value: .corruptHeader) }
+        case corruptHeader
         /// An event stream message headers is missing
-        public static var missingHeader: Self { .init(value: .missingHeader) }
+        case missingHeader
         /// The message payload is corrupt
-        public static var corruptPayload: Self { .init(value: .corruptPayload) }
+        case corruptPayload
         /// The message was an error
-        public static var errorMessage: Self { .init(value: .errorMessage) }
+        case errorMessage
         /// Unsupported content type
-        public static var unsupportedContentType: Self { .init(value: .unsupportedContentType) }
+        case unsupportedContentType
         /// Unknown message type
-        public static var unknownMessageType: Self { .init(value: .unknownMessageType) }
+        case unknownMessageType
     }
     public let code: Code
     public let message: String?

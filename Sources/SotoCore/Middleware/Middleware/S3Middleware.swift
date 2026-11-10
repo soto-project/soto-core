@@ -154,20 +154,21 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         context: AWSMiddlewareContext,
         next: AWSMiddlewareNextHandler
     ) async throws -> AWSHTTPResponse {
+        let arnString = url.path.dropFirst()
         guard let arn = ARN(string: url.path.dropFirst()),
             let resourceType = arn.resourceType,
             let accountId = arn.accountId
         else {
-            throw AWSClient.ClientError.invalidARN
+            throw AWSClient.ClientError.invalidARN(String(arnString))
         }
         let region = arn.region ?? context.serviceConfig.region
         guard resourceType == "accesspoint", arn.service == "s3-object-lambda" || arn.service == "s3-outposts" || arn.service == "s3" else {
-            throw AWSClient.ClientError.invalidARN
+            throw AWSClient.ClientError.invalidARN(String(arnString))
         }
 
         // extract bucket and path from ARN
         let resourceIDSplit = arn.resourceId.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false)
-        guard let bucket = resourceIDSplit.first else { throw AWSClient.ClientError.invalidARN }
+        guard let bucket = resourceIDSplit.first else { throw AWSClient.ClientError.invalidARN(String(arnString)) }
         let path = String(resourceIDSplit.dropFirst().first ?? "")
         let service = String(arn.service)
         let serviceIdentifier = service != "s3" ? service : "s3-accesspoint"

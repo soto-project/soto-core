@@ -27,7 +27,7 @@ extension CloudFrontSigner {
     ///   - date: Date that URL is valid from, defaults to now
     /// - Returns: The complete signed URL
     public func signedURL(url: String, policy: Policy, date: Date = Date()) throws -> String {
-        switch policy._wrapped {
+        switch policy {
         case .canned(let expires):
             return try signedURLCanned(url: url, expires: expires, date: date)
         case .custom(let customPolicy):

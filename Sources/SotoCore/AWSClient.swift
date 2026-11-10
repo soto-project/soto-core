@@ -186,33 +186,22 @@ public final class AWSClient: Sendable {
     // MARK: Member structs/enums
 
     /// Errors returned by `AWSClient` code
-    public struct ClientError: Swift.Error, Equatable {
-        enum Error {
-            case alreadyShutdown
-            case invalidURL
-            case bodyLengthMismatch
-            case waiterFailed
-            case waiterTimeout
-            case failedToAccessPayload
-            case invalidARN
-        }
-
-        let error: Error
-
+    @nonexhaustive
+    public enum ClientError: Error, Equatable {
         /// client has already been shutdown
-        public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
+        case alreadyShutdown
         /// URL provided to client is invalid
-        public static var invalidURL: ClientError { .init(error: .invalidURL) }
+        case invalidURL
         /// Data supplied to the Request does not equal length indicated
-        public static var bodyLengthMismatch: ClientError { .init(error: .bodyLengthMismatch) }
+        case bodyLengthMismatch
         /// Waiter failed, but without an error. ie a successful api call was an error
-        public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
+        case waiterFailed
         /// Waiter failed to complete in time alloted
-        public static var waiterTimeout: ClientError { .init(error: .waiterTimeout) }
+        case waiterTimeout
         /// Failed to access payload while building request
-        public static var failedToAccessPayload: ClientError { .init(error: .failedToAccessPayload) }
+        case failedToAccessPayload
         /// ARN provided to client is invalid
-        public static var invalidARN: ClientError { .init(error: .invalidARN) }
+        case invalidARN(String)
     }
 
     /// Additional options
@@ -571,7 +560,7 @@ extension AWSClient {
 extension AWSClient.ClientError: CustomStringConvertible {
     /// return human readable description of error
     public var description: String {
-        switch error {
+        switch self {
         case .alreadyShutdown:
             return "The AWSClient is already shutdown"
         case .invalidURL:
@@ -587,8 +576,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "Waiter failed to complete in time allocated"
         case .failedToAccessPayload:
             return "Failed to access payload while building request for AWS"
-        case .invalidARN:
-            return "ARN provided to the client was invalid"
+        case .invalidARN(let arn):
+            return "ARN (\(arn)) provided to the client was invalid"
         }
     }
 }

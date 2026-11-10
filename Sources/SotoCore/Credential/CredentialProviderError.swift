@@ -12,21 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-public struct CredentialProviderError: Error, Equatable {
-    enum _CredentialProviderError: Equatable {
-        case noProvider
-        case tokenIdFileFailedToLoad
-    }
-
-    let error: _CredentialProviderError
-
-    public static var noProvider: CredentialProviderError { .init(error: .noProvider) }
-    public static var tokenIdFileFailedToLoad: CredentialProviderError { .init(error: .tokenIdFileFailedToLoad) }
+@nonexhaustive
+public enum CredentialProviderError: Error, Equatable {
+    case noProvider
+    case tokenIdFileFailedToLoad
 }
 
 extension CredentialProviderError: CustomStringConvertible {
     public var description: String {
-        switch self.error {
+        switch self {
         case .noProvider:
             return "No credential provider found."
         case .tokenIdFileFailedToLoad:

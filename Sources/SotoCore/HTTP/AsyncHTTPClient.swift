@@ -80,23 +80,14 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 //
 //===----------------------------------------------------------------------===//
 
-public struct HTTP1TypeConversionError: Error, Equatable {
-    private enum Internal {
-        case invalidMethod
-        case missingPath
-        case invalidStatusCode
-    }
-    private let value: Internal
-    private init(_ value: Internal) {
-        self.value = value
-    }
-
+@nonexhaustive
+public enum HTTP1TypeConversionError: Error {
     /// Failed to create HTTPRequest.Method from HTTPMethod
-    public static var invalidMethod: Self { .init(.invalidMethod) }
+    case invalidMethod
     /// Failed to extract a path from HTTPRequest
-    public static var missingPath: Self { .init(.missingPath) }
+    case missingPath
     /// HTTPResponseHead had an invalid status code
-    public static var invalidStatusCode: Self { .init(.invalidStatusCode) }
+    case invalidStatusCode
 }
 
 extension HTTPMethod {

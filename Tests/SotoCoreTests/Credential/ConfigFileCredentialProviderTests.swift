@@ -185,9 +185,9 @@ struct ConfigFileCredentialProviderTests {
         }
     }
 
-    @Test func testConfigFileShutdown() {
+    @Test func testConfigFileShutdown() async {
         let client = createAWSClient(credentialProvider: .configFile())
-        #expect(throws: Never.self) { try client.syncShutdown() }
+        await #expect(throws: Never.self) { try await client.shutdown() }
     }
 
     // MARK: - Role ARN Credential
@@ -248,17 +248,15 @@ struct ConfigFileCredentialProviderTests {
             },
             httpClient: httpClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+        try await withClient(client) {
+            // Retrieve credentials
+            let credentials = try await client.credentialProvider.getCredential(
+                logger: TestEnvironment.logger
+            )
 
-        // Retrieve credentials
-        async let futureCredentials = client.credentialProvider.getCredential(
-            logger: TestEnvironment.logger
-        )
-
-        let credentials = try await futureCredentials
-
-        // Verify credentials match those returned from STS Assume Role operation
-        #expect(credentials.accessKeyId == stsCredentials.accessKeyId)
-        #expect(credentials.secretAccessKey == stsCredentials.secretAccessKey)
+            // Verify credentials match those returned from STS Assume Role operation
+            #expect(credentials.accessKeyId == stsCredentials.accessKeyId)
+            #expect(credentials.secretAccessKey == stsCredentials.secretAccessKey)
+        }
     }
 }

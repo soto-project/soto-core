@@ -150,39 +150,6 @@ public final class AWSClient: Sendable {
         try? await self.credentialProvider.shutdown()
     }
 
-    /// Shutdown client synchronously.
-    ///
-    /// Before an `AWSClient` is deleted you need to call this function or the async version `shutdown`
-    /// to do a clean shutdown of the client.
-    ///
-    /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
-    @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
-    public func syncShutdown() throws {
-        withUnsafeCurrentTask { task in
-            if task != nil {
-                self.logger.warning("syncShutdown() called from inside a Task, which can deadlock. Use shutdown() instead.")
-            }
-        }
-        let errorStorage: NIOLockedValueBox<(any Error)?> = .init(nil)
-        let semaphore = DispatchSemaphore(value: 0)
-        Task {
-            do {
-                try await self.shutdown()
-            } catch {
-                errorStorage.withLockedValue { errorStorage in
-                    errorStorage = error
-                }
-            }
-            semaphore.signal()
-        }
-        semaphore.wait()
-        try errorStorage.withLockedValue { errorStorage in
-            if let error = errorStorage {
-                throw error
-            }
-        }
-    }
-
     // MARK: Member structs/enums
 
     /// Errors returned by `AWSClient` code

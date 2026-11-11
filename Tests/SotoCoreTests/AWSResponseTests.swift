@@ -299,7 +299,7 @@ class AWSResponseTests {
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         switch error?.errorCode {
-        case "InvalidResourceException":
+        case "InvalidResource":
             break
         default:
             Issue.record()

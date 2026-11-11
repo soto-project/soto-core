@@ -120,6 +120,14 @@ public struct AWSHTTPResponse: Sendable {
                     "aws-error-message": .string(error.message ?? ""),
                 ]
             )
+            // we have an error that isn't recognised by the service but we have an errorCode. Some services but not all
+            // append all errors with the word "Exception". To get consistent standard errors we remove this from the error
+            // code
+            if error.errorCode.hasSuffix("Exception") {
+                let errorCode = String(error.errorCode.dropLast(9))
+                let newError = AWSResponseError(errorCode: errorCode, message: error.message, response: error.response)
+                return newError
+            }
             return error
         } catch {
             return nil

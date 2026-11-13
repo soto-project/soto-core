@@ -106,14 +106,18 @@ extension CredentialProviderFactory {
         threadPool: NIOThreadPool = .singleton
     ) -> CredentialProviderFactory {
         Self { context -> any CredentialProvider in
-            StaticCredentialProvider.fromEnvironment()
-                ?? STSAssumeRoleCredentialProvider.fromEnvironment(
-                    context: context,
-                    endpoint: endpoint,
-                    retryPolicy: retryPolicy,
-                    threadPool: threadPool
-                )
-                ?? NullCredentialProvider()
+            if let provider = StaticCredentialProvider.fromEnvironment() {
+                return provider
+            }
+            if let provider = STSAssumeRoleCredentialProvider.fromEnvironment(
+                context: context,
+                endpoint: endpoint,
+                retryPolicy: retryPolicy,
+                threadPool: threadPool
+            ) {
+                return RotatingCredentialProvider(context: context, provider: provider)
+            }
+            return NullCredentialProvider()
         }
     }
 

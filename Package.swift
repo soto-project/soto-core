@@ -39,9 +39,11 @@ let package = Package(
     ],
     traits: [
         "ServiceLifecycleSupport",
+        "ConfigurationSupport",
         .default(
             enabledTraits: [
-                "ServiceLifecycleSupport"
+                "ServiceLifecycleSupport",
+                "ConfigurationSupport",
             ]
         ),
     ],
@@ -60,6 +62,7 @@ let package = Package(
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.2.0"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.12.0"),
         .package(url: "https://github.com/swiftlang/swift-subprocess", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: []),
     ],
     targets: [
         .target(
@@ -88,6 +91,11 @@ let package = Package(
                     name: "ServiceLifecycle",
                     package: "swift-service-lifecycle",
                     condition: .when(traits: ["ServiceLifecycleSupport"])
+                ),
+                .product(
+                    name: "Configuration",
+                    package: "swift-configuration",
+                    condition: .when(traits: ["ConfigurationSupport"])
                 ),
             ],
             swiftSettings: swiftSettings

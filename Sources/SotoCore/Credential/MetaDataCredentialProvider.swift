@@ -118,6 +118,10 @@ struct ECSMetaDataClient: MetadataClient {
             return nil
         }
 
+        self.init(httpClient: httpClient, relativeURL: relativeURL, host: host)
+    }
+
+    init(httpClient: any AWSHTTPClient, relativeURL: String, host: String = ECSMetaDataClient.Host) {
         self.httpClient = httpClient
         self.endpointURL = "\(host)\(relativeURL)"
     }

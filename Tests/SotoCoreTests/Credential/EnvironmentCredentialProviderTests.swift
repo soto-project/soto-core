@@ -229,6 +229,28 @@ struct EnvironmentCredentialProviderTests {
         }
     }
 
+    @Test func testWebIdentityProviderIsRotating() async throws {
+        Environment.unset(name: "AWS_ACCESS_KEY_ID")
+        Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
+        Environment.set("arn:aws:iam::000000000000:role/test", for: "AWS_ROLE_ARN")
+        Environment.set("session", for: "AWS_ROLE_SESSION_NAME")
+        Environment.set("/dev/null", for: "AWS_WEB_IDENTITY_TOKEN_FILE")
+        defer {
+            Environment.unset(name: "AWS_ROLE_ARN")
+            Environment.unset(name: "AWS_ROLE_SESSION_NAME")
+            Environment.unset(name: "AWS_WEB_IDENTITY_TOKEN_FILE")
+        }
+
+        let httpClient = MockHTTPClient { _ in fatalError() }
+        let factory: CredentialProviderFactory = .environment
+        let provider = factory.createProvider(
+            context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
+        )
+        try await provider.shutdown()
+
+        #expect(provider is RotatingCredentialProvider)
+    }
+
     @Test func testECSProvider() async throws {
         let path = "/" + UUID().uuidString
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)

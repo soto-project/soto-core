@@ -106,6 +106,12 @@ extension AWSHTTPRequest {
         self.request = HTTPRequest(method: method, url: url, headerFields: headers)
         // Query and EC2 protocols require the Action and API Version in the body
         switch configuration.serviceProtocol {
+        case .json, .restjson:
+            if method != .get && method != .head && method != .delete {
+                self.body = .init(string: "{}")
+            } else {
+                self.body = .init()
+            }
         case .query, .ec2:
             let params = ["Action": operationName, "Version": configuration.apiVersion]
             if let queryBody = try QueryEncoder().encode(params) {

@@ -274,108 +274,23 @@ class AWSRequestTests {
         #expect(request?.headers[HTTPField.Name("iso8601-date")!] == "1970-01-12T13:46:40.000Z")
     }
 
-    @Test func testQueryEncoding() {
+    @Test func testHeaderPrefix() {
         struct Input: AWSEncodableShape {
-            let p: String?
-            let q: String
-            let r: String?
+            let content: [String: String]
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeQuery(self.p, key: "puery")
-                requestContainer.encodeQuery(self.q, key: "query")
-                requestContainer.encodeQuery(self.r, key: "ruery")
+                requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")
             }
 
             private enum CodingKeys: CodingKey {}
         }
-        let input = Input(p: "hmmm", q: "=3+5897^sdfjh&", r: nil)
-        let config = createServiceConfig(region: .useast1)
+        let input = Input(content: ["one": "first", "two": "second"])
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
-    }
-
-    @Test func testQueryEncodedArray() {
-        struct Input: AWSEncodableShape {
-            let q: [String]?
-            func encode(to encoder: any Encoder) throws {
-                _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeQuery(self.q, key: "query")
-            }
-
-            private enum CodingKeys: CodingKey {}
-        }
-        let input = Input(q: ["=3+5897^sdfjh&", "test"])
-        let config = createServiceConfig(region: .useast1)
-
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
-    }
-
-    @Test func testQueryEncodedDictionary() {
-        struct Input: AWSEncodableShape {
-            let q: [String: Int]?
-            func encode(to encoder: any Encoder) throws {
-                _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeQuery(self.q)
-            }
-
-            private enum CodingKeys: CodingKey {}
-        }
-        let input = Input(q: ["one": 1, "two": 2])
-        let config = createServiceConfig(region: .useast2, service: "myservice")
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
-    }
-
-    @Test func testQueryDate() {
-        struct Input: AWSEncodableShape {
-            let d: Date?
-            func encode(to encoder: any Encoder) throws {
-                _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeQuery(self.d, key: "d")
-            }
-
-            private enum CodingKeys: CodingKey {}
-        }
-        let input = Input(d: Date(timeIntervalSince1970: 1_000_000))
-        let config = createServiceConfig(region: .useast2, service: "myservice")
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?d=1000000")
-    }
-
-    @Test func testQueryInPath() {
-        struct Input: AWSEncodableShape {
-            let q: String
-            func encode(to encoder: any Encoder) throws {
-                _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeQuery(self.q, key: "query")
-            }
-
-            private enum CodingKeys: CodingKey {}
-        }
-        let input = Input(q: "path")
-        let config = createServiceConfig(region: .useast1)
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .get, input: input, configuration: config)
-        }
-        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=path&test=true")
-    }
-
-    @Test func testQueryProtocolEmptyRequest() {
-        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .query)
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, configuration: config) }
-        #expect(request?.body.asString() == "Action=Test&Version=01-01-2001")
+        #expect(request?.headers[HTTPField.Name("x-aws-metadata-one")!] == "first")
+        #expect(request?.headers[HTTPField.Name("x-aws-metadata-two")!] == "second")
     }
 
     @Test func testURIEncoding() {
@@ -398,67 +313,295 @@ class AWSRequestTests {
         #expect(request?.request.url?.absoluteString == "https://s3.ca-central-1.amazonaws.com/MyKey")
     }
 
-    @Test func testCreateWithXMLNamespace() throws {
-        struct Input: AWSEncodableShape {
-            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
-            let number: Int
+    struct QueryProtocol {
+        @Test func testQueryEncoding() {
+            struct Input: AWSEncodableShape {
+                let p: String?
+                let q: String
+                let r: String?
+                func encode(to encoder: any Encoder) throws {
+                    _ = encoder.container(keyedBy: CodingKeys.self)
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeQuery(self.p, key: "puery")
+                    requestContainer.encodeQuery(self.q, key: "query")
+                    requestContainer.encodeQuery(self.r, key: "ruery")
+                }
+
+                private enum CodingKeys: CodingKey {}
+            }
+            let input = Input(p: "hmmm", q: "=3+5897^sdfjh&", r: nil)
+            let config = createServiceConfig(region: .useast1)
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
         }
-        let input = Input(number: 5)
-        let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
+
+        @Test func testQueryEncodedArray() {
+            struct Input: AWSEncodableShape {
+                let q: [String]?
+                func encode(to encoder: any Encoder) throws {
+                    _ = encoder.container(keyedBy: CodingKeys.self)
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeQuery(self.q, key: "query")
+                }
+
+                private enum CodingKeys: CodingKey {}
+            }
+            let input = Input(q: ["=3+5897^sdfjh&", "test"])
+            let config = createServiceConfig(region: .useast1)
+
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
         }
-        guard case .byteBuffer(let buffer) = request?.body.storage else {
-            Issue.record("Shouldn't get here")
-            return
+
+        @Test func testQueryEncodedDictionary() {
+            struct Input: AWSEncodableShape {
+                let q: [String: Int]?
+                func encode(to encoder: any Encoder) throws {
+                    _ = encoder.container(keyedBy: CodingKeys.self)
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeQuery(self.q)
+                }
+
+                private enum CodingKeys: CodingKey {}
+            }
+            let input = Input(q: ["one": 1, "two": 2])
+            let config = createServiceConfig(region: .useast2, service: "myservice")
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
         }
-        let element = try XML.Document(buffer: buffer).rootElement()
-        #expect(element?.xmlString == "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+
+        @Test func testQueryDate() {
+            struct Input: AWSEncodableShape {
+                let d: Date?
+                func encode(to encoder: any Encoder) throws {
+                    _ = encoder.container(keyedBy: CodingKeys.self)
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeQuery(self.d, key: "d")
+                }
+
+                private enum CodingKeys: CodingKey {}
+            }
+            let input = Input(d: Date(timeIntervalSince1970: 1_000_000))
+            let config = createServiceConfig(region: .useast2, service: "myservice")
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?d=1000000")
+        }
+
+        @Test func testQueryInPath() {
+            struct Input: AWSEncodableShape {
+                let q: String
+                func encode(to encoder: any Encoder) throws {
+                    _ = encoder.container(keyedBy: CodingKeys.self)
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeQuery(self.q, key: "query")
+                }
+
+                private enum CodingKeys: CodingKey {}
+            }
+            let input = Input(q: "path")
+            let config = createServiceConfig(region: .useast1)
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=path&test=true")
+        }
+
+        @Test func testQueryProtocolEmptyRequest() {
+            let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .query)
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, configuration: config) }
+            #expect(request?.body.asString() == "Action=Test&Version=01-01-2001")
+        }
     }
 
-    @Test func testServiceXMLNamespace() throws {
-        struct Input: AWSEncodableShape {
-            let number: Int
+    struct XMLProtocol {
+        @Test func testCreateWithXMLNamespace() throws {
+            struct Input: AWSEncodableShape {
+                public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
+                let number: Int
+            }
+            let input = Input(number: 5)
+            let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
+            }
+            guard case .byteBuffer(let buffer) = request?.body.storage else {
+                Issue.record("Shouldn't get here")
+                return
+            }
+            let element = try XML.Document(buffer: buffer).rootElement()
+            #expect(element?.xmlString == "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
         }
-        let input = Input(number: 5)
-        let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
+
+        @Test func testServiceXMLNamespace() throws {
+            struct Input: AWSEncodableShape {
+                let number: Int
+            }
+            let input = Input(number: 5)
+            let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
+            }
+            guard case .byteBuffer(let buffer) = request?.body.storage else {
+                Issue.record("Shouldn't get here")
+                return
+            }
+            let element = try XML.Document(buffer: buffer).rootElement()
+            #expect(element?.xmlString == "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
         }
-        guard case .byteBuffer(let buffer) = request?.body.storage else {
-            Issue.record("Shouldn't get here")
-            return
+
+        @Test func testXMLPayload() throws {
+            struct Payload: AWSEncodableShape {
+                let number: Int
+            }
+            struct Input: AWSEncodableShape {
+                static let _xmlRootNodeName: String? = "Payload"
+                let payload: Payload
+
+                func encode(to encoder: any Encoder) throws {
+                    try self.payload.encode(to: encoder)
+                }
+            }
+            let input = Input(payload: .init(number: 12_345_678))
+            let config = createServiceConfig(serviceProtocol: .restxml)
+            let request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .post,
+                input: input,
+                configuration: config
+            )
+
+            #expect(request.body.asString() == #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
         }
-        let element = try XML.Document(buffer: buffer).rootElement()
-        #expect(element?.xmlString == "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-    @Test func testDataInJsonPayload() {
-        struct DataContainer: AWSEncodableShape {
-            let data: Data
+    struct JsonProtocol {
+        @Test func testDataInPayload() {
+            struct DataContainer: AWSEncodableShape {
+                let data: Data
+            }
+            struct J: AWSEncodableShape {
+                var _payload: DataContainer { self.dataContainer }
+                let dataContainer: DataContainer
+            }
+            let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
+            let jsonConfig = createServiceConfig(serviceProtocol: .json(version: "1.1"))
+            #expect(throws: Never.self) {
+                try AWSHTTPRequest(operation: "PutRecord", path: "/", method: .post, input: input, configuration: jsonConfig)
+            }
         }
-        struct J: AWSEncodableShape {
-            var _payload: DataContainer { self.dataContainer }
-            let dataContainer: DataContainer
+
+        @Test func testJSONPayload() throws {
+            struct Payload: AWSEncodableShape {
+                let number: Int
+            }
+            struct Input: AWSEncodableShape {
+                var _payload: Payload { self.payload }
+                let payload: Payload
+
+                func encode(to encoder: any Encoder) throws {
+                    try self.payload.encode(to: encoder)
+                }
+            }
+            let input = Input(payload: .init(number: 12_345_678))
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+            let request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .post,
+                input: input,
+                configuration: config
+            )
+
+            #expect(request.body.asString() == #"{"number":12345678}"#)
         }
-        let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
-        let jsonConfig = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        #expect(throws: Never.self) { try AWSHTTPRequest(operation: "PutRecord", path: "/", method: .post, input: input, configuration: jsonConfig) }
+
+        /// JSON POST request require a body even if there is no data to POST
+        @Test func testEmptyPostJsonObject() throws {
+            struct Input: AWSEncodableShape {}
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
+            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .post, configuration: config)
+            #expect(request.body.asString() == "{}")
+            #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
+        }
+
+        /// JSON GET, HEAD, DELETE requests should not output a body if it is empty ie `{}`
+        @Test func testEmptyGetJsonObject() throws {
+            struct Input: AWSEncodableShape {}
+            let input = Input()
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
+            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            #expect(request.body.asString() == "")
+            #expect(request.headers[.contentType] == nil)
+            let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .head, input: input, configuration: config)
+            #expect(request2.body.asString() == "")
+            #expect(request2.headers[.contentType] == nil)
+            let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .delete, input: input, configuration: config)
+            #expect(request3.body.asString() == "")
+            #expect(request3.headers[.contentType] == nil)
+        }
+
+        @Test func testJSONPayloadAndHeader() throws {
+            struct Payload: AWSEncodableShape {
+                let number: Int
+            }
+            struct Input: AWSEncodableShape {
+                var _payload: Payload { self.payload }
+                let payload: Payload
+                let contentType: String
+
+                func encode(to encoder: any Encoder) throws {
+                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    requestContainer.encodeHeader(self.contentType, key: "content-type")
+                    try self.payload.encode(to: encoder)
+                }
+            }
+            let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+            let request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .post,
+                input: input,
+                configuration: config
+            )
+
+            #expect(request.body.asString() == #"{"number":12345678}"#)
+            #expect(request.headers[.contentType] == "image/jpeg")
+        }
     }
 
-    @Test func testEC2ClientRequest() {
-        struct Input: AWSEncodableShape {
-            let array: [String]
+    struct EC2Protocol {
+        /// Verify EC2 variables start with a capital letter
+        @Test func testEC2ClientRequest() {
+            struct Input: AWSEncodableShape {
+                let array: [String]
+            }
+            let input = Input(array: ["entry1", "entry2"])
+            let config = createServiceConfig(serviceProtocol: .ec2, apiVersion: "2013-12-02")
+            var request: AWSHTTPRequest?
+            #expect(throws: Never.self) {
+                request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
+            }
+            #expect(request?.body.asString() == "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
         }
-        let input = Input(array: ["entry1", "entry2"])
-        let config = createServiceConfig(serviceProtocol: .ec2, apiVersion: "2013-12-02")
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.body.asString() == "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
-
     @Test func testPercentEncodePath() {
         struct Input: AWSEncodableShape {
             let path: String
@@ -523,32 +666,6 @@ class AWSRequestTests {
         #expect(request?.request.url?.absoluteString == "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")
     }
 
-    /// JSON POST request require a body even if there is no data to POST
-    @Test func testEmptyPostJsonObject() throws {
-        struct Input: AWSEncodableShape {}
-        let input = Input()
-        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .post, input: input, configuration: config)
-        #expect(request.body.asString() == "{}")
-        #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
-    }
-
-    /// JSON GET, HEAD, DELETE requests should not output a body if it is empty ie `{}`
-    @Test func testEmptyGetJsonObject() throws {
-        struct Input: AWSEncodableShape {}
-        let input = Input()
-        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
-        #expect(request.body.asString() == "")
-        #expect(request.headers[.contentType] == nil)
-        let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .head, input: input, configuration: config)
-        #expect(request2.body.asString() == "")
-        #expect(request2.headers[.contentType] == nil)
-        let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .delete, input: input, configuration: config)
-        #expect(request3.body.asString() == "")
-        #expect(request3.headers[.contentType] == nil)
-    }
-
     /// Test host prefix
     @Test func testHostPrefix() throws {
         struct Input: AWSEncodableShape {}
@@ -603,85 +720,6 @@ class AWSRequestTests {
         )
 
         #expect(request.request.url?.absoluteString == "https://12345678.test.com/")
-    }
-
-    @Test func testJSONPayload() throws {
-        struct Payload: AWSEncodableShape {
-            let number: Int
-        }
-        struct Input: AWSEncodableShape {
-            var _payload: Payload { self.payload }
-            let payload: Payload
-
-            func encode(to encoder: any Encoder) throws {
-                try self.payload.encode(to: encoder)
-            }
-        }
-        let input = Input(payload: .init(number: 12_345_678))
-        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
-        let request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .post,
-            input: input,
-            configuration: config
-        )
-
-        #expect(request.body.asString() == #"{"number":12345678}"#)
-    }
-
-    @Test func testXMLPayload() throws {
-        struct Payload: AWSEncodableShape {
-            let number: Int
-        }
-        struct Input: AWSEncodableShape {
-            static let _xmlRootNodeName: String? = "Payload"
-            let payload: Payload
-
-            func encode(to encoder: any Encoder) throws {
-                try self.payload.encode(to: encoder)
-            }
-        }
-        let input = Input(payload: .init(number: 12_345_678))
-        let config = createServiceConfig(serviceProtocol: .restxml)
-        let request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .post,
-            input: input,
-            configuration: config
-        )
-
-        #expect(request.body.asString() == #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
-    }
-
-    @Test func testJSONPayloadAndHeader() throws {
-        struct Payload: AWSEncodableShape {
-            let number: Int
-        }
-        struct Input: AWSEncodableShape {
-            var _payload: Payload { self.payload }
-            let payload: Payload
-            let contentType: String
-
-            func encode(to encoder: any Encoder) throws {
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeHeader(self.contentType, key: "content-type")
-                try self.payload.encode(to: encoder)
-            }
-        }
-        let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
-        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
-        let request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .post,
-            input: input,
-            configuration: config
-        )
-
-        #expect(request.body.asString() == #"{"number":12345678}"#)
-        #expect(request.headers[.contentType] == "image/jpeg")
     }
 
     /// Test disable S3 chunked upload flag works
@@ -859,25 +897,6 @@ class AWSRequestTests {
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
         #expect(request?.headers[.xAmzChecksumSHA256] == "QTQclc9fXffjuWqvYJnh/EUMgSdZcp1uOoUeq4SmiFY=")
-    }
-
-    @Test func testHeaderPrefix() {
-        struct Input: AWSEncodableShape {
-            let content: [String: String]
-            func encode(to encoder: any Encoder) throws {
-                _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")
-            }
-
-            private enum CodingKeys: CodingKey {}
-        }
-        let input = Input(content: ["one": "first", "two": "second"])
-        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
-        var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
-        #expect(request?.headers[HTTPField.Name("x-aws-metadata-one")!] == "first")
-        #expect(request?.headers[HTTPField.Name("x-aws-metadata-two")!] == "second")
     }
 
     @Test func testDocument() throws {

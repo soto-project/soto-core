@@ -532,29 +532,44 @@ class AWSRequestTests {
             #expect(request.body.asString() == #"{"number":12345678}"#)
         }
 
-        /// JSON POST request require a body even if there is no data to POST
-        @Test func testEmptyPostJsonObject() throws {
-            struct Input: AWSEncodableShape {}
+        /// JSON requests require a body even if there is no data if method isn't get, head, delete
+        @Test(arguments: [
+            (HTTPRequest.Method.get, true),
+            (HTTPRequest.Method.head, true),
+            (HTTPRequest.Method.delete, true),
+            (HTTPRequest.Method.put, false),
+            (HTTPRequest.Method.patch, false),
+        ]) func testJsonNoInput(method: HTTPRequest.Method, isEmpty: Bool) throws {
             let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .post, configuration: config)
-            #expect(request.body.asString() == "{}")
-            #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
+            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: method, configuration: config)
+            if isEmpty {
+                #expect(request.body.isEmpty)
+                #expect(request.headers[.contentType] == nil)
+            } else {
+                #expect(request.body.asString() == "{}")
+                #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
+            }
         }
 
-        /// JSON GET, HEAD, DELETE requests should not output a body if it is empty ie `{}`
-        @Test func testEmptyGetJsonObject() throws {
+        /// Test JSON request body with an empty input. Different should not output a body if it is empty ie `{}`
+        @Test(arguments: [
+            (HTTPRequest.Method.get, true),
+            (HTTPRequest.Method.head, true),
+            (HTTPRequest.Method.delete, true),
+            (HTTPRequest.Method.put, false),
+            (HTTPRequest.Method.patch, false),
+        ]) func testJsonEmptyInput(method: HTTPRequest.Method, isEmpty: Bool) throws {
             struct Input: AWSEncodableShape {}
             let input = Input()
             let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
-            #expect(request.body.asString() == "")
-            #expect(request.headers[.contentType] == nil)
-            let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .head, input: input, configuration: config)
-            #expect(request2.body.asString() == "")
-            #expect(request2.headers[.contentType] == nil)
-            let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .delete, input: input, configuration: config)
-            #expect(request3.body.asString() == "")
-            #expect(request3.headers[.contentType] == nil)
+            let request = try AWSHTTPRequest(operation: "Test", path: "/", method: method, input: input, configuration: config)
+            if isEmpty {
+                #expect(request.body.isEmpty)
+                #expect(request.headers[.contentType] == nil)
+            } else {
+                #expect(request.body.asString() == "{}")
+                #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
+            }
         }
 
         @Test func testJSONPayloadAndHeader() throws {

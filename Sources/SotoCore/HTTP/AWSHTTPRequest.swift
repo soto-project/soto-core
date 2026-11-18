@@ -114,11 +114,12 @@ extension AWSHTTPRequest {
             }
         case .query, .ec2:
             let params = ["Action": operationName, "Version": configuration.apiVersion]
-            if let queryBody = try QueryEncoder().encode(params) {
-                self.body = .init(buffer: configuration.byteBufferAllocator.buffer(string: queryBody))
-            } else {
-                self.body = .init()
-            }
+            self.body =
+                if let queryBody = try QueryEncoder().encode(params) {
+                    .init(buffer: configuration.byteBufferAllocator.buffer(string: queryBody))
+                } else {
+                    .init()
+                }
         default:
             self.body = .init()
         }

@@ -257,7 +257,12 @@ final class CBORDecoderImpl: Decoder {
             switch entry.key {
             case .text(let key): map[key] = entry.value
             case .unsigned(let key): map[String(key)] = entry.value
-            case .negative(let key): map["-\(UInt64(key) &+ 1)"] = entry.value
+            case .negative(let key):
+                // The key is -1 - n. For n == UInt64.max the magnitude is 2^64, which does not fit in a UInt64.
+                guard key < UInt64.max else {
+                    throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "Negative integer map key is out of range"))
+                }
+                map["-\(key + 1)"] = entry.value
             default:
                 throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "Map keys must be strings or integers"))
             }

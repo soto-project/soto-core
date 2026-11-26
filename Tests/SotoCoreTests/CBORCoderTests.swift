@@ -414,6 +414,14 @@ struct CBORCoderTests {
         #expect(throws: DecodingError.self) { try decode([String: Int].self, "a1 f4 00") }  // bool key
     }
 
+    @Test("Negative integer map keys decode as text, and the smallest one throws")
+    func negativeIntegerMapKeys() throws {
+        #expect(try decode([String: Int].self, "a1 3863 00") == ["-100": 0])
+        #expect(try decode([String: Int].self, "a1 3bfffffffffffffffe 00") == ["-18446744073709551615": 0])
+        // -2^64 does not fit in a UInt64 magnitude
+        #expect(throws: DecodingError.self) { try decode([String: Int].self, "a1 3bffffffffffffffff 00") }
+    }
+
     @Test("A missing key throws keyNotFound")
     func missingKey() {
         struct Required: Decodable { let name: String }

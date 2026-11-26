@@ -55,6 +55,22 @@ struct RPCv2CBORProtocolTests {
         }
     }
 
+    /// Shape with a host label member, which fills in the endpoint prefix and is also sent in the body
+    struct HostLabelInput: AWSEncodableShape {
+        let accountId: String
+
+        private enum CodingKeys: String, CodingKey {
+            case accountId
+        }
+
+        func encode(to encoder: any Encoder) throws {
+            let request = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.accountId, forKey: .accountId)
+            request.encodeHostPrefix(self.accountId, key: "accountId")
+        }
+    }
+
     /// Shape whose payload is a raw body, which the CBOR protocol cannot carry
     struct RawPayloadInput: AWSEncodableShape {
         let payload: AWSHTTPBody
@@ -211,6 +227,24 @@ struct RPCv2CBORProtocolTests {
         #expect(decoded.name == "n")
         #expect(decoded.headerMember == "h")
         #expect(decoded.queryMember == "q")
+    }
+
+    @Test func hostLabelFillsInTheEndpointPrefix() throws {
+        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        let request = try AWSHTTPRequest(
+            operation: "GetThing",
+            path: "/",
+            method: .post,
+            input: HostLabelInput(accountId: "123456789012"),
+            hostPrefix: "{accountId}.",
+            configuration: config
+        )
+        #expect(request.request.url?.host == "123456789012.test.us-east-1.amazonaws.com")
+        guard case .byteBuffer(let buffer) = request.body.storage else {
+            Issue.record("Expected a byte buffer body")
+            return
+        }
+        #expect(try CBORDecoder().decode([String: String].self, from: buffer) == ["accountId": "123456789012"])
     }
 
     @Test func rawPayloadIsRefused() {

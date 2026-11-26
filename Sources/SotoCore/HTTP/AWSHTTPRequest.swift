@@ -172,6 +172,8 @@ extension AWSHTTPRequest {
             if scratchContainer.body != nil {
                 throw AWSClient.ClientError.unsupportedPayload
             }
+            // Host label members still fill in the endpoint prefix.
+            requestEncoderContainer.hostPrefix = scratchContainer.hostPrefix
 
         case .restxml:
             var encoder = XMLEncoder()

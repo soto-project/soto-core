@@ -169,6 +169,8 @@ public final class AWSClient: Sendable {
         case failedToAccessPayload
         /// ARN provided to client is invalid
         case invalidARN(String)
+        /// The service protocol cannot send a raw or streaming payload
+        case unsupportedPayload
     }
 
     /// Additional options
@@ -545,6 +547,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "Failed to access payload while building request for AWS"
         case .invalidARN(let arn):
             return "ARN (\(arn)) provided to the client was invalid"
+        case .unsupportedPayload:
+            return "The request has a raw or streaming payload, which the RPC v2 CBOR protocol does not support"
         }
     }
 }

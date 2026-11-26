@@ -55,6 +55,15 @@ struct RPCv2CBORProtocolTests {
         }
     }
 
+    /// Shape whose payload is a raw body, which the CBOR protocol cannot carry
+    struct RawPayloadInput: AWSEncodableShape {
+        let payload: AWSHTTPBody
+
+        func encode(to encoder: any Encoder) throws {
+            try self.payload.encode(to: encoder)
+        }
+    }
+
     struct Output: AWSDecodableShape, Encodable {
         let name: String?
         let count: Int?
@@ -202,6 +211,19 @@ struct RPCv2CBORProtocolTests {
         #expect(decoded.name == "n")
         #expect(decoded.headerMember == "h")
         #expect(decoded.queryMember == "q")
+    }
+
+    @Test func rawPayloadIsRefused() {
+        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        #expect(throws: AWSClient.ClientError.unsupportedPayload) {
+            try AWSHTTPRequest(
+                operation: "PutThing",
+                path: "/",
+                method: .post,
+                input: RawPayloadInput(payload: .init(string: "raw")),
+                configuration: config
+            )
+        }
     }
 
     // MARK: Response

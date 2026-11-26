@@ -98,6 +98,12 @@ extension AWSResponseError: Decodable {
             let errorCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
             self.errorCode = .init(errorCode)
 
+        case .rpcv2Cbor:
+            // the error type is only read from the body, X-Amzn-ErrorType is ignored
+            let code = try container.decode(String.self, forKey: .type)
+            let errorCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
+            self.errorCode = .init(errorCode)
+
         case .restxml, .query, .ec2:
             self.errorCode = try container.decode(String.self, forKey: .Code)
         }

@@ -71,6 +71,16 @@ public struct AWSHTTPResponse: Sendable {
             jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
             return try jsonDecoder.decode(Output.self, from: payloadData)
 
+        case .rpcv2Cbor:
+            var decoder = CBORDecoder()
+            decoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
+            if let payload, payload.readableBytes > 0 {
+                return try decoder.decode(Output.self, from: payload)
+            } else {
+                // an empty body is an empty structure (CBOR empty map)
+                return try decoder.decode(Output.self, from: [0xA0])
+            }
+
         case .restxml, .query, .ec2:
             var xmlElement: XML.Element
             if let buffer = payload,
@@ -149,6 +159,13 @@ public struct AWSHTTPResponse: Sendable {
                 jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 jsonDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
                 return try jsonDecoder.decode(AWSError.self, from: buffer)
+
+            case .rpcv2Cbor:
+                var cborDecoder = CBORDecoder()
+                cborDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                cborDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
+                cborDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
+                return try cborDecoder.decode(AWSError.self, from: buffer)
 
             case .restxml:
                 let xmlDocument = try XML.Document(buffer: buffer)

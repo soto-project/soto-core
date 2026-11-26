@@ -20,6 +20,8 @@ public enum ServiceProtocol {
     case restxml
     case query
     case ec2
+    /// Smithy RPC v2 with CBOR payloads. `serviceName` is the Smithy service shape name used in the request path.
+    case rpcv2Cbor(serviceName: String)
 }
 
 extension ServiceProtocol {
@@ -33,6 +35,8 @@ extension ServiceProtocol {
             return "application/octet-stream"
         case .query, .ec2:
             return "application/x-www-form-urlencoded; charset=utf-8"
+        case .rpcv2Cbor:
+            return "application/cbor"
         }
     }
 }

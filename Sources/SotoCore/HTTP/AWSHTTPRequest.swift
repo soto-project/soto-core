@@ -84,6 +84,9 @@ extension AWSHTTPRequest {
     ) throws {
         var headers = HTTPFields()
 
+        // RPC v2 requests are always sent to /service/{service}/operation/{operation}
+        let path = Self.rpcv2Path(serviceProtocol: configuration.serviceProtocol, operation: operationName) ?? path
+
         let url: URL?
         if let hostPrefix {
             guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(path)"), let host = urlComponents.host else {
@@ -98,8 +101,8 @@ extension AWSHTTPRequest {
             throw AWSClient.ClientError.invalidURL
         }
 
-        // set x-amz-target header
-        if let target = configuration.amzTarget {
+        // set x-amz-target header. RPC v2 identifies the operation in the path instead
+        if let target = configuration.amzTarget, !configuration.serviceProtocol.isRPCv2 {
             headers[.xAmzTarget] = "\(target).\(operationName)"
         }
 
@@ -120,6 +123,9 @@ extension AWSHTTPRequest {
                 } else {
                     .init()
                 }
+        case .rpcv2Cbor:
+            // an operation with no input sends no body
+            self.body = .init()
         default:
             self.body = .init()
         }
@@ -138,6 +144,7 @@ extension AWSHTTPRequest {
         // validate input parameters
         try input.validate()
 
+        let path = Self.rpcv2Path(serviceProtocol: configuration.serviceProtocol, operation: operationName) ?? path
         let requestEncoderContainer = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
 
         var body: AWSHTTPBody
@@ -153,6 +160,13 @@ extension AWSHTTPRequest {
             } else {
                 body = .init(buffer: buffer)
             }
+
+        case .rpcv2Cbor:
+            // RPC v2 ignores HTTP binding traits: the whole shape is sent in the body. Members that the
+            // shape would write to headers, query or path go to a scratch container which is discarded.
+            var encoder = CBOREncoder()
+            encoder.userInfo[.awsRequest] = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
+            body = .init(buffer: try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator))
 
         case .restxml:
             var encoder = XMLEncoder()
@@ -190,7 +204,9 @@ extension AWSHTTPRequest {
                 body = .init()
             }
         }
-        body = requestEncoderContainer.body ?? body
+        if !configuration.serviceProtocol.isRPCv2 {
+            body = requestEncoderContainer.body ?? body
+        }
         Self.calculateChecksumHeader(
             headers: &requestEncoderContainer.headers,
             body: body,
@@ -199,7 +215,7 @@ extension AWSHTTPRequest {
         )
 
         // set x-amz-target header
-        if let target = configuration.amzTarget {
+        if let target = configuration.amzTarget, !configuration.serviceProtocol.isRPCv2 {
             requestEncoderContainer.headers[.xAmzTarget] = "\(target).\(operationName)"
         }
 
@@ -210,7 +226,13 @@ extension AWSHTTPRequest {
         )
         self.body = body
 
-        self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
+        self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil && !configuration.serviceProtocol.isRPCv2)
+    }
+
+    /// Request path for RPC v2 protocols, nil for all other protocols
+    private static func rpcv2Path(serviceProtocol: ServiceProtocol, operation: String) -> String? {
+        guard case .rpcv2Cbor(let serviceName) = serviceProtocol else { return nil }
+        return "/service/\(serviceName)/operation/\(operation)"
     }
 
     /// Calculate checksum header for request
@@ -279,6 +301,10 @@ extension AWSHTTPRequest {
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
         self.request.headerFields[.userAgent] = "Soto/8.0"
+        if serviceProtocol.isRPCv2 {
+            self.request.headerFields[.smithyProtocol] = "rpc-v2-cbor"
+            self.request.headerFields[.accept] = "application/cbor"
+        }
         guard self.request.headerFields[.contentType] == nil else {
             return
         }
@@ -372,4 +398,15 @@ extension OptionalCustomCoding: AWSRequestEncodableString where Coder: CustomEnc
         guard let value = self.wrappedValue else { return nil }
         return Coder.string(from: value)
     }
+}
+
+extension ServiceProtocol {
+    fileprivate var isRPCv2: Bool {
+        if case .rpcv2Cbor = self { return true }
+        return false
+    }
+}
+
+extension HTTPField.Name {
+    fileprivate static let smithyProtocol = Self("Smithy-Protocol")!
 }

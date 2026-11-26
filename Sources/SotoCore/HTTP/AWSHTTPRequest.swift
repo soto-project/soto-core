@@ -226,7 +226,10 @@ extension AWSHTTPRequest {
         )
         self.body = body
 
-        self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil && !configuration.serviceProtocol.isRPCv2)
+        self.addStandardHeaders(
+            serviceProtocol: configuration.serviceProtocol,
+            raw: requestEncoderContainer.body != nil && !configuration.serviceProtocol.isRPCv2
+        )
     }
 
     /// Request path for RPC v2 protocols, nil for all other protocols

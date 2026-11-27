@@ -63,6 +63,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.12.0"),
         .package(url: "https://github.com/swiftlang/swift-subprocess", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: []),
+        .package(url: "https://github.com/brokenhandsio/swift-cbor.git", from: "1.0.0-rc.1"),
     ],
     targets: [
         .target(
@@ -87,6 +88,7 @@ let package = Package(
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Subprocess", package: "swift-subprocess", condition: .when(platforms: [.macOS, .linux])),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
+                .product(name: "CBOR", package: "swift-cbor"),
                 .product(
                     name: "ServiceLifecycle",
                     package: "swift-service-lifecycle",
@@ -151,6 +153,7 @@ let package = Package(
                 .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
                 .product(name: "InMemoryLogging", package: "swift-log"),
+                .product(name: "CBOR", package: "swift-cbor"),
             ],
             resources: [
                 .copy("Resources/credential-process-test-helper.sh")

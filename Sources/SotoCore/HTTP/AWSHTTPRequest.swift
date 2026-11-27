@@ -165,10 +165,8 @@ extension AWSHTTPRequest {
             // RPC v2 ignores HTTP binding traits: the whole shape is sent in the body. Members that the
             // shape would write to headers, query or path go to a scratch container which is discarded.
             // A raw or streaming payload member has nowhere to go in a CBOR body, so it is refused.
-            var encoder = CBOREncoder()
             let scratchContainer = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
-            encoder.userInfo[.awsRequest] = scratchContainer
-            body = .init(buffer: try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator))
+            body = .init(buffer: try RPCv2CBOR.encode(input, request: scratchContainer, allocator: configuration.byteBufferAllocator))
             if scratchContainer.body != nil {
                 throw AWSClient.ClientError.unsupportedPayload
             }

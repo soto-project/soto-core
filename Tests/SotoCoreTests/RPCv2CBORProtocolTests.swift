@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import CBOR
 import HTTPTypes
 import NIOCore
 import SotoTestUtils
@@ -80,6 +81,20 @@ struct RPCv2CBORProtocolTests {
         }
     }
 
+    /// Shape with a raw body nested as a member, as opposed to the shape's own payload
+    struct NestedRawPayloadInput: AWSEncodableShape {
+        let payload: AWSHTTPBody
+
+        private enum CodingKeys: String, CodingKey {
+            case payload
+        }
+
+        func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.payload, forKey: .payload)
+        }
+    }
+
     struct Output: AWSDecodableShape, Encodable {
         let name: String?
         let count: Int?
@@ -121,7 +136,7 @@ struct RPCv2CBORProtocolTests {
     static let serviceProtocol = ServiceProtocol.rpcv2Cbor(serviceName: "TestService")
 
     static func cborBody<T: Encodable>(_ value: T) throws -> AWSHTTPBody {
-        .init(buffer: try CBOREncoder().encodeAsByteBuffer(value, allocator: .init()))
+        .init(buffer: ByteBuffer(bytes: try CBOREncoder().encode(value)))
     }
 
     // MARK: Protocol
@@ -151,7 +166,7 @@ struct RPCv2CBORProtocolTests {
             Issue.record("Expected a byte buffer body")
             return
         }
-        let decoded = try CBORDecoder().decode(Input.self, from: buffer)
+        let decoded = try CBORDecoder().decode(Input.self, from: Array(buffer.readableBytesView))
         #expect(decoded.name == "hello")
         #expect(decoded.count == 3)
     }
@@ -223,7 +238,7 @@ struct RPCv2CBORProtocolTests {
             Issue.record("Expected a byte buffer body")
             return
         }
-        let decoded = try CBORDecoder().decode(BoundInput.self, from: buffer)
+        let decoded = try CBORDecoder().decode(BoundInput.self, from: Array(buffer.readableBytesView))
         #expect(decoded.name == "n")
         #expect(decoded.headerMember == "h")
         #expect(decoded.queryMember == "q")
@@ -244,7 +259,24 @@ struct RPCv2CBORProtocolTests {
             Issue.record("Expected a byte buffer body")
             return
         }
-        #expect(try CBORDecoder().decode([String: String].self, from: buffer) == ["accountId": "123456789012"])
+        #expect(try CBORDecoder().decode([String: String].self, from: Array(buffer.readableBytesView)) == ["accountId": "123456789012"])
+    }
+
+    /// Dates are tag 1 epoch seconds and blobs are byte strings, whatever the shape
+    @Test func datesAndBlobsUseTheirCBORTypes() throws {
+        struct Timed: Encodable {
+            let at: Date
+            let blob: Data
+        }
+        let buffer = try RPCv2CBOR.encode(
+            Timed(at: Date(timeIntervalSince1970: 1_363_896_240), blob: Data([1, 2, 3])),
+            request: .init(path: "/", hostPrefix: nil),
+            allocator: .init()
+        )
+        let expected: [UInt8] =
+            [0xA2] + [0x62, 0x61, 0x74] + [0xC1, 0x1A, 0x51, 0x4B, 0x67, 0xB0]
+            + [0x64, 0x62, 0x6C, 0x6F, 0x62] + [0x43, 0x01, 0x02, 0x03]
+        #expect(Array(buffer.readableBytesView) == expected)
     }
 
     @Test func rawPayloadIsRefused() {
@@ -255,6 +287,19 @@ struct RPCv2CBORProtocolTests {
                 path: "/",
                 method: .post,
                 input: RawPayloadInput(payload: .init(string: "raw")),
+                configuration: config
+            )
+        }
+    }
+
+    @Test func nestedRawPayloadIsRefused() {
+        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        #expect(throws: AWSClient.ClientError.unsupportedPayload) {
+            try AWSHTTPRequest(
+                operation: "PutThing",
+                path: "/",
+                method: .post,
+                input: NestedRawPayloadInput(payload: .init(string: "raw")),
                 configuration: config
             )
         }

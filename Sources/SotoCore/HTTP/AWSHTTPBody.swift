@@ -121,7 +121,9 @@ extension AWSHTTPBody: AWSEncodableShape {
     public func encode(to encoder: any Encoder) throws {
         enum CodingKeys: CodingKey {}
         _ = encoder.container(keyedBy: CodingKeys.self)
-        let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+        guard let requestContainer = encoder.userInfo[.awsRequest] as? RequestEncodingContainer else {
+            throw AWSClient.ClientError.unsupportedPayload
+        }
         requestContainer.body = self
     }
 }

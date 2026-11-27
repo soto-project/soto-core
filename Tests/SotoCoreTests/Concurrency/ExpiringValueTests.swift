@@ -99,4 +99,34 @@ final class ExpiringValueTests {
         }
         #expect(value == 1)
     }
+
+    /// Test expiring value shutdowns correctly
+    @Test func testShutdownWithoutValue() async throws {
+        let stream = AsyncStream.makeStream(of: Int.self)
+        let expiringValue = ExpiringValue<Int> {
+            do {
+                try await Task.sleep(for: .seconds(30))
+                stream.continuation.yield(0)
+            } catch {
+                stream.continuation.yield(1)
+            }
+            return (1, Date() + 3)
+        }
+        await expiringValue.shutdown()
+        stream.continuation.yield(2)
+
+        var iterator = stream.stream.makeAsyncIterator()
+        await #expect(iterator.next() == 1)
+        await #expect(iterator.next() == 2)
+    }
+
+    /// Test expiring value shutdowns correctly
+    @Test func testShutdownWithValue() async throws {
+        // non-expiring
+        let expiringValue = ExpiringValue<Int>(0, expires: Date() + 1, threshold: 3)
+        await expiringValue.shutdown()
+        // expiring
+        let expiringValue2 = ExpiringValue<Int>(0, expires: Date() + 5, threshold: 2)
+        await expiringValue2.shutdown()
+    }
 }

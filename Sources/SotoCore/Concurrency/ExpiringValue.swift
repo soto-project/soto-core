@@ -20,6 +20,10 @@ import FoundationEssentials
 import Foundation
 #endif
 
+enum ExpiringValueError: Error {
+    case shutdown
+}
+
 /// Type holding a value and an expiration value.
 ///
 /// When accessing the value you have to provide a closure that will update the
@@ -42,6 +46,8 @@ actor ExpiringValue<T: Sendable> {
         case withValueAndWaiting(T, Date, Task<T, Error>)
         /// Error
         case error(Error)
+        /// shutdown
+        case shutdown
     }
 
     var state: State
@@ -116,7 +122,11 @@ actor ExpiringValue<T: Sendable> {
 
         case .error(let error):
             throw error
+
+        case .shutdown:
+            throw ExpiringValueError.shutdown
         }
+
         return try await withTaskCancellationHandler {
             switch await task.result {
             case .success(let value):
@@ -141,14 +151,19 @@ actor ExpiringValue<T: Sendable> {
         }
     }
 
-    func cancel() {
+    /// Shutdown and wait for outstanding task to finish
+    func shutdown() async {
         switch self.state {
         case .initialWaitingOnValue(let task):
+            self.state = .shutdown
             task.cancel()
+            _ = await task.result
         case .waitingOnValue(let task), .withValueAndWaiting(_, _, let task):
+            self.state = .shutdown
             task.cancel()
+            _ = await task.result
         default:
-            break
+            self.state = .shutdown
         }
     }
 }

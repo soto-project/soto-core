@@ -72,12 +72,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
 
     /// Shutdown credential provider
     public func shutdown() async throws {
-        await self.expiringCredential.cancel()
-        // ensure internal credential provider is not still running
-        _ = try? await self.expiringCredential.getValue {
-            try Task.checkCancellation()
-            preconditionFailure("Cannot get here")
-        }
+        await self.expiringCredential.shutdown()
         try await self.provider.shutdown()
     }
 

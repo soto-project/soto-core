@@ -312,8 +312,9 @@ public final class RequestEncodingContainer: Sendable {
     internal static func urlEncodePathComponent(_ value: String) -> String {
         value.addingAWSPercentEncoding(forURLComponent: .pathComponent)
     }
-}
 
-extension CodingUserInfoKey {
-    public static var awsRequest: Self { .init(rawValue: "soto.awsRequest")! }
+    /// Has nothing been written to the headers, query, path or body since the container was created with `path`
+    func usesNoHTTPBindings(path: String) -> Bool {
+        self._internal.withLockedValue { $0.headers.isEmpty && $0.queryParams.isEmpty && $0.path == path && $0.body == nil }
+    }
 }

@@ -36,6 +36,8 @@ public struct HeaderDecodingError: Error {
 /// the full response and not only its body
 public struct ResponseDecodingContainer: Sendable {
     public let response: AWSHTTPResponse
+    /// Protocol of the service the response came from
+    public let serviceProtocol: ServiceProtocol
 
     /// Decode header to type conforming to RawRepresentable
     @inlinable
@@ -116,8 +118,4 @@ public struct ResponseDecodingContainer: Sendable {
         }
         return [String: String](headers.map { (key: String($0.name.rawName.dropFirst(header.count)), value: $0.value) }) { first, _ in first }
     }
-}
-
-extension CodingUserInfoKey {
-    public static var awsResponse: Self { .init(rawValue: "soto.awsResponse")! }
 }

@@ -26,7 +26,7 @@ public struct AWSEventPayload: Sendable, Codable, Equatable {
 
     /// Codable decode
     public init(from decoder: any Decoder) throws {
-        let response = try decoder.requireAWSEventContainer()
+        let response = decoder.awsEventContainer
         self.buffer = response.decodePayload()
     }
 

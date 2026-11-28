@@ -93,41 +93,32 @@ private struct _EventStreamDecoder: Decoder {
         }
 
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
-            switch self.headers[":content-type"] {
-            case "application/json":
-                let jsonDecoder = JSONDecoder()
-                jsonDecoder.dateDecodingStrategy = .secondsSince1970
-                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
-                    try jsonDecoder.decode(T.self, from: self.payload)
+            try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
+                switch self.headers[":content-type"] {
+                case "application/json":
+                    let jsonDecoder = JSONDecoder()
+                    jsonDecoder.dateDecodingStrategy = .secondsSince1970
+                    return try jsonDecoder.decode(T.self, from: self.payload)
+
+                case "text/xml", "application/xml":
+                    let xmlDocument = try XML.Document(buffer: self.payload)
+                    let xmlElement = xmlDocument.rootElement() ?? .init(name: "__empty_element")
+                    return try XMLDecoder().decode(T.self, from: xmlElement)
+
+                case "application/octet-stream":
+                    // if content-type is a raw buffer then use JSONDecoder() to pass this to `init(from:)`
+                    // via the event container
+                    let jsonDecoder = JSONDecoder()
+                    jsonDecoder.dateDecodingStrategy = .secondsSince1970
+                    return try jsonDecoder.decode(T.self, from: .init(staticString: "{}"))
+
+                case .none:
+                    // if there is no content-type then create object using JSONDecoder() and some empty json
+                    return try JSONDecoder().decode(T.self, from: .init(staticString: "{}"))
+
+                case .some(let header):
+                    throw AWSEventStreamError.unsupportedContentType(header)
                 }
-
-            case "text/xml", "application/xml":
-                let xmlDocument = try XML.Document(buffer: self.payload)
-                let xmlElement = xmlDocument.rootElement() ?? .init(name: "__empty_element")
-
-                var xmlDecoder = XMLDecoder()
-                xmlDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
-                    try xmlDecoder.decode(T.self, from: xmlElement)
-                }
-
-            case "application/octet-stream":
-                // if content-type is a raw buffer then use JSONDecoder() to pass this to `init(from:)`
-                // via the user info`
-                let jsonDecoder = JSONDecoder()
-                jsonDecoder.dateDecodingStrategy = .secondsSince1970
-                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
-                    try jsonDecoder.decode(T.self, from: .init(staticString: "{}"))
-                }
-
-            case .none:
-                // if there is no content-type then create object using JSONDecoder() and some empty json
-                return try JSONDecoder().decode(T.self, from: .init(staticString: "{}"))
-
-            case .some(let header):
-                throw AWSEventStreamError.unsupportedContentType(header)
             }
         }
 
@@ -292,11 +283,6 @@ public struct EventDecodingContainer: Sendable {
     func decodePayload() -> ByteBuffer {
         self.payload
     }
-}
-
-extension CodingUserInfoKey {
-    /// AWS Event user info key
-    public static var awsEvent: Self { .init(rawValue: "soto.awsEvent")! }
 }
 
 /// Errors thrown while decoding the event stream buffers

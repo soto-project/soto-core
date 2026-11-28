@@ -16,6 +16,11 @@ public import HTTPTypes
 
 extension HTTPField.Name {
     @inlinable
+    package static var smithyProtocol: Self {
+        .init("Smithy-Protocol")!
+    }
+
+    @inlinable
     package static var xAmzTarget: Self {
         .init("X-Amz-Target")!
     }

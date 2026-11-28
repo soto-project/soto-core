@@ -72,21 +72,8 @@ public struct AWSResponseError: AWSErrorType {
 extension AWSResponseError: Decodable {
     @inlinable
     public init(from decoder: any Decoder) throws {
-        guard let response = decoder.awsResponseContainer else {
-            throw DecodingError.valueNotFound(
-                AWSResponseError.self,
-                .init(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Decoding an AWSResponseError requires an AWSCodingContext response"
-                )
-            )
-        }
-        guard let serviceProtocol = decoder.awsServiceProtocol else {
-            throw DecodingError.valueNotFound(
-                AWSResponseError.self,
-                .init(codingPath: decoder.codingPath, debugDescription: "Decoding an AWSResponseError requires an AWSCodingContext serviceProtocol")
-            )
-        }
+        let response = decoder.awsResponseContainer
+        let serviceProtocol = response.serviceProtocol
         let container = try decoder.container(keyedBy: CodingKeys.self)
         switch serviceProtocol {
         case .restjson, .json:

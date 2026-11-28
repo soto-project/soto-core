@@ -46,7 +46,7 @@ struct RPCv2CBORProtocolTests {
         }
 
         func encode(to encoder: any Encoder) throws {
-            let request = try encoder.requireAWSRequestContainer()
+            let request = encoder.awsRequestContainer
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.name, forKey: .name)
             try container.encode(self.headerMember, forKey: .headerMember)
@@ -65,7 +65,7 @@ struct RPCv2CBORProtocolTests {
         }
 
         func encode(to encoder: any Encoder) throws {
-            let request = try encoder.requireAWSRequestContainer()
+            let request = encoder.awsRequestContainer
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.accountId, forKey: .accountId)
             request.encodeHostPrefix(self.accountId, key: "accountId")
@@ -133,7 +133,21 @@ struct RPCv2CBORProtocolTests {
         var errorCode: String { "ResourceNotFound" }
     }
 
-    static let serviceProtocol = ServiceProtocol.rpcv2Cbor(serviceName: "TestService")
+    static let serviceProtocol = ServiceProtocol.rpcv2Cbor
+
+    /// Service configuration of an RPC v2 service. The service shape name is held in `amzTarget`.
+    static func config(path: String? = nil, endpoint: String? = nil) -> AWSServiceConfig {
+        if let endpoint {
+            return createServiceConfig(
+                region: .useast1,
+                amzTarget: "TestService",
+                service: "test",
+                serviceProtocol: Self.serviceProtocol,
+                endpoint: endpoint
+            )
+        }
+        return createServiceConfig(region: .useast1, amzTarget: "TestService", service: "test", serviceProtocol: Self.serviceProtocol)
+    }
 
     static func cborBody<T: Encodable>(_ value: T) throws -> AWSHTTPBody {
         .init(buffer: ByteBuffer(bytes: try CBOREncoder().encode(value)))
@@ -148,7 +162,7 @@ struct RPCv2CBORProtocolTests {
     // MARK: Request
 
     @Test func requestHeadersPathAndBody() throws {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        let config = Self.config()
         let request = try AWSHTTPRequest(
             operation: "GetThing",
             path: "/",
@@ -172,15 +186,10 @@ struct RPCv2CBORProtocolTests {
     }
 
     @Test func requestKeepsEndpointPrefix() throws {
-        let config = createServiceConfig(
-            region: .useast1,
-            service: "test",
-            serviceProtocol: Self.serviceProtocol,
-            endpoint: "https://localhost:4566"
-        )
+        let config = Self.config(endpoint: "https://localhost:4566")
         let request = try AWSHTTPRequest(
             operation: "GetThing",
-            path: "/ignored",
+            path: "/",
             method: .post,
             input: Input(name: "a", count: 1),
             configuration: config
@@ -188,13 +197,25 @@ struct RPCv2CBORProtocolTests {
         #expect(request.request.url?.absoluteString == "https://localhost:4566/service/TestService/operation/GetThing")
     }
 
-    @Test func requestHasNoAmzTarget() throws {
-        let config = createServiceConfig(
-            region: .useast1,
-            amzTarget: "Target_20200101",
-            service: "test",
-            serviceProtocol: Self.serviceProtocol
+    @Test(arguments: [
+        ("/", "/service/TestService/operation/GetThing"), ("/prefix", "/prefix/service/TestService/operation/GetThing"),
+        ("/prefix/", "/prefix/service/TestService/operation/GetThing"),
+    ])
+    func operationIsAppendedToThePath(path: String, expected: String) throws {
+        let withInput = try AWSHTTPRequest(
+            operation: "GetThing",
+            path: path,
+            method: .post,
+            input: Input(name: "a", count: 1),
+            configuration: Self.config()
         )
+        #expect(withInput.request.url?.path == expected)
+        let noInput = try AWSHTTPRequest(operation: "GetThing", path: path, method: .post, configuration: Self.config())
+        #expect(noInput.request.url?.path == expected)
+    }
+
+    @Test func requestHasNoAmzTarget() throws {
+        let config = Self.config()
         let withInput = try AWSHTTPRequest(
             operation: "GetThing",
             path: "/",
@@ -208,7 +229,7 @@ struct RPCv2CBORProtocolTests {
     }
 
     @Test func requestWithoutInputHasNoBodyOrContentType() throws {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        let config = Self.config()
         let request = try AWSHTTPRequest(operation: "GetThing", path: "/", method: .post, configuration: config)
         #expect(request.request.url?.path == "/service/TestService/operation/GetThing")
         #expect(request.headers[.init("Smithy-Protocol")!] == "rpc-v2-cbor")
@@ -221,31 +242,23 @@ struct RPCv2CBORProtocolTests {
         #expect(buffer.readableBytes == 0)
     }
 
-    @Test func requestIgnoresHTTPBindings() throws {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
-        let request = try AWSHTTPRequest(
-            operation: "GetThing",
-            path: "/{pathMember}",
-            method: .post,
-            input: BoundInput(name: "n", headerMember: "h", queryMember: "q"),
-            configuration: config
-        )
-        #expect(request.headers[.init("x-bound-header")!] == nil)
-        #expect(request.request.url?.query == nil)
-        #expect(request.request.url?.path == "/service/TestService/operation/GetThing")
-
-        guard case .byteBuffer(let buffer) = request.body.storage else {
-            Issue.record("Expected a byte buffer body")
-            return
+    // exit tests are not available on every platform the package builds for
+    #if os(macOS) || os(Linux) || os(Windows)
+    @Test func shapeThatWritesHTTPBindingsIsAProgrammerError() async {
+        await #expect(processExitsWith: .failure) {
+            _ = try? AWSHTTPRequest(
+                operation: "GetThing",
+                path: "/",
+                method: .post,
+                input: BoundInput(name: "n", headerMember: "h", queryMember: "q"),
+                configuration: Self.config()
+            )
         }
-        let decoded = try CBORDecoder().decode(BoundInput.self, from: Array(buffer.readableBytesView))
-        #expect(decoded.name == "n")
-        #expect(decoded.headerMember == "h")
-        #expect(decoded.queryMember == "q")
     }
+    #endif
 
     @Test func hostLabelFillsInTheEndpointPrefix() throws {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
+        let config = Self.config()
         let request = try AWSHTTPRequest(
             operation: "GetThing",
             path: "/",
@@ -270,7 +283,6 @@ struct RPCv2CBORProtocolTests {
         }
         let buffer = try RPCv2CBOR.encode(
             Timed(at: Date(timeIntervalSince1970: 1_363_896_240), blob: Data([1, 2, 3])),
-            request: .init(path: "/", hostPrefix: nil),
             allocator: .init()
         )
         let expected: [UInt8] =
@@ -279,31 +291,35 @@ struct RPCv2CBORProtocolTests {
         #expect(Array(buffer.readableBytesView) == expected)
     }
 
-    @Test func rawPayloadIsRefused() {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
-        #expect(throws: AWSClient.ClientError.unsupportedPayload) {
-            try AWSHTTPRequest(
+    // exit tests are not available on every platform the package builds for
+    #if os(macOS) || os(Linux) || os(Windows)
+    @Test func rawPayloadIsAProgrammerError() async {
+        await #expect(processExitsWith: .failure) {
+            _ = try? AWSHTTPRequest(
                 operation: "PutThing",
                 path: "/",
                 method: .post,
                 input: RawPayloadInput(payload: .init(string: "raw")),
-                configuration: config
+                configuration: Self.config()
             )
         }
     }
+    #endif
 
-    @Test func nestedRawPayloadIsRefused() {
-        let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: Self.serviceProtocol)
-        #expect(throws: AWSClient.ClientError.unsupportedPayload) {
-            try AWSHTTPRequest(
+    // exit tests are not available on every platform the package builds for
+    #if os(macOS) || os(Linux) || os(Windows)
+    @Test func nestedRawPayloadIsAProgrammerError() async {
+        await #expect(processExitsWith: .failure) {
+            _ = try? AWSHTTPRequest(
                 operation: "PutThing",
                 path: "/",
                 method: .post,
                 input: NestedRawPayloadInput(payload: .init(string: "raw")),
-                configuration: config
+                configuration: Self.config()
             )
         }
     }
+    #endif
 
     // MARK: Response
 

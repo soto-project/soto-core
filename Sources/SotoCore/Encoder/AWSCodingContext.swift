@@ -26,10 +26,6 @@ public enum AWSCodingContext {
     @TaskLocal public static var request: RequestEncodingContainer?
     /// Container the response shape reads headers, status code and body from
     @TaskLocal public static var response: ResponseDecodingContainer?
-    /// Protocol of the service that is being coded
-    @TaskLocal public static var serviceProtocol: ServiceProtocol?
-    /// Error type of the service that is being decoded
-    @TaskLocal public static var errorMap: (any (AWSErrorType & Decodable).Type)?
     /// Container the event of an event stream is read from
     @TaskLocal public static var event: EventDecodingContainer?
 }
@@ -37,15 +33,11 @@ public enum AWSCodingContext {
 extension Encoder {
     /// The request container of the request that is being encoded.
     ///
-    /// It is read from ``AWSCodingContext/request``. The encoder's `userInfo` is only consulted when that is not set.
-    public var awsRequestContainer: RequestEncodingContainer? {
-        AWSCodingContext.request ?? self.userInfo[.awsRequest] as? RequestEncodingContainer
-    }
-
-    /// The request container, or ``AWSClient/ClientError/missingCodingContext`` when there is none.
-    public func requireAWSRequestContainer() throws -> RequestEncodingContainer {
-        guard let container = self.awsRequestContainer else {
-            throw AWSClient.ClientError.missingCodingContext
+    /// Encoding a shape outside of ``AWSCodingContext/request`` is a programmer error and stops the program.
+    @inlinable
+    public var awsRequestContainer: RequestEncodingContainer {
+        guard let container = AWSCodingContext.request else {
+            fatalError("Encoding an AWS shape requires AWSCodingContext.request to be set")
         }
         return container
     }
@@ -54,38 +46,22 @@ extension Encoder {
 extension Decoder {
     /// The response container of the response that is being decoded.
     ///
-    /// It is read from ``AWSCodingContext/response``. The decoder's `userInfo` is only consulted when that is not set.
-    public var awsResponseContainer: ResponseDecodingContainer? {
-        AWSCodingContext.response ?? self.userInfo[.awsResponse] as? ResponseDecodingContainer
-    }
-
-    /// The protocol of the service that is being decoded.
-    public var awsServiceProtocol: ServiceProtocol? {
-        AWSCodingContext.serviceProtocol ?? self.userInfo[.awsProtocol] as? ServiceProtocol
-    }
-
-    /// The error type of the service that is being decoded.
-    public var awsErrorMap: (any (AWSErrorType & Decodable).Type)? {
-        AWSCodingContext.errorMap ?? self.userInfo[.awsErrorMap] as? (any (AWSErrorType & Decodable).Type)
-    }
-
-    /// The event container of the event that is being decoded.
-    public var awsEventContainer: EventDecodingContainer? {
-        AWSCodingContext.event ?? self.userInfo[.awsEvent] as? EventDecodingContainer
-    }
-
-    /// The response container, or ``AWSClient/ClientError/missingCodingContext`` when there is none.
-    public func requireAWSResponseContainer() throws -> ResponseDecodingContainer {
-        guard let container = self.awsResponseContainer else {
-            throw AWSClient.ClientError.missingCodingContext
+    /// Decoding a shape outside of ``AWSCodingContext/response`` is a programmer error and stops the program.
+    @inlinable
+    public var awsResponseContainer: ResponseDecodingContainer {
+        guard let container = AWSCodingContext.response else {
+            fatalError("Decoding an AWS shape requires AWSCodingContext.response to be set")
         }
         return container
     }
 
-    /// The event container, or ``AWSClient/ClientError/missingCodingContext`` when there is none.
-    public func requireAWSEventContainer() throws -> EventDecodingContainer {
-        guard let container = self.awsEventContainer else {
-            throw AWSClient.ClientError.missingCodingContext
+    /// The event container of the event that is being decoded.
+    ///
+    /// Decoding an event outside of ``AWSCodingContext/event`` is a programmer error and stops the program.
+    @inlinable
+    public var awsEventContainer: EventDecodingContainer {
+        guard let container = AWSCodingContext.event else {
+            fatalError("Decoding an AWS event requires AWSCodingContext.event to be set")
         }
         return container
     }

@@ -28,10 +28,12 @@ import Foundation
 
 @Suite("AWSCodingContext")
 struct AWSCodingContextTests {
-    /// Member shape that writes a header and a host label, as a generated shape does
+    /// Member shape that writes a header and a host label, as a generated shape does. The code generator
+    /// drops the header binding for RPC v2 services, which `bindHeader` stands in for.
     struct Nested: AWSEncodableShape, Decodable {
         let id: String
         let headerValue: String
+        var bindHeader = true
 
         private enum CodingKeys: String, CodingKey {
             case id
@@ -39,11 +41,13 @@ struct AWSCodingContextTests {
         }
 
         func encode(to encoder: any Encoder) throws {
-            let request = try encoder.requireAWSRequestContainer()
+            let request = encoder.awsRequestContainer
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.id, forKey: .id)
             try container.encode(self.headerValue, forKey: .headerValue)
-            request.encodeHeader(self.headerValue, key: "x-nested")
+            if self.bindHeader {
+                request.encodeHeader(self.headerValue, key: "x-nested")
+            }
             request.encodeHostPrefix(self.id, key: "id")
         }
     }
@@ -71,12 +75,12 @@ struct AWSCodingContextTests {
     }
 
     static func summary(_ serviceProtocol: ServiceProtocol) throws -> Summary {
-        let config = createServiceConfig(region: .useast1, amzTarget: "Target", service: "test", serviceProtocol: serviceProtocol)
+        let config = createServiceConfig(region: .useast1, amzTarget: "TestService", service: "test", serviceProtocol: serviceProtocol)
         let request = try AWSHTTPRequest(
             operation: "Op",
             path: "/thing",
             method: .post,
-            input: Root(name: "a", nested: .init(id: "42", headerValue: "h")),
+            input: Root(name: "a", nested: .init(id: "42", headerValue: "h", bindHeader: !Self.isCBOR(serviceProtocol))),
             hostPrefix: "{id}.",
             configuration: config
         )
@@ -95,7 +99,7 @@ struct AWSCodingContextTests {
         )
     }
 
-    static let cbor = ServiceProtocol.rpcv2Cbor(serviceName: "TestService")
+    static let cbor = ServiceProtocol.rpcv2Cbor
 
     // MARK: Nested shapes
 
@@ -111,7 +115,7 @@ struct AWSCodingContextTests {
     @Test func nestedMembersWithRPCv2() throws {
         let summary = try Self.summary(Self.cbor)
         #expect(summary.nestedHeader == nil)
-        #expect(summary.url == "https://42.test.us-east-1.amazonaws.com/service/TestService/operation/Op")
+        #expect(summary.url == "https://42.test.us-east-1.amazonaws.com/thing/service/TestService/operation/Op")
         // {"name": "a", "nested": {"id": "42", "headerValue": "h"}}
         #expect(summary.body == "a2 64 6e 61 6d 65 61 61 66 6e 65 73 74 65 64 a2 62 69 64 62 34 32 6b 68 65 61 64 65 72 56 61 6c 75 65 61 68")
     }
@@ -152,26 +156,33 @@ struct AWSCodingContextTests {
 
     // MARK: Scope
 
-    @Test func encodingOutsideAScopeThrows() {
-        #expect(throws: AWSClient.ClientError.missingCodingContext) {
-            try CBOREncoder().encode(Nested(id: "1", headerValue: "h"))
+    // exit tests are not available on every platform the package builds for
+    #if os(macOS) || os(Linux) || os(Windows)
+    @Test func encodingOutsideAScopeIsAProgrammerError() async {
+        await #expect(processExitsWith: .failure) {
+            _ = try? CBOREncoder().encode(Nested(id: "1", headerValue: "h"))
         }
-        #expect(throws: AWSClient.ClientError.missingCodingContext) {
-            _ = try JSONEncoder().encode(Nested(id: "1", headerValue: "h"))
+        await #expect(processExitsWith: .failure) {
+            _ = try? JSONEncoder().encode(Nested(id: "1", headerValue: "h"))
         }
     }
+    #endif
 
-    @Test func decodingOutsideAScopeThrows() throws {
-        struct NeedsResponse: Decodable {
-            init(from decoder: any Decoder) throws {
-                _ = try decoder.requireAWSResponseContainer()
-            }
+    // exit tests are not available on every platform the package builds for
+    #if os(macOS) || os(Linux) || os(Windows)
+    @Test func decodingOutsideAScopeIsAProgrammerError() async {
+        await #expect(processExitsWith: .failure) {
+            _ = try? JSONDecoder().decode(NeedsResponse.self, from: Data("{}".utf8))
         }
-        #expect(throws: AWSClient.ClientError.missingCodingContext) {
-            try JSONDecoder().decode(NeedsResponse.self, from: Data("{}".utf8))
+        await #expect(processExitsWith: .failure) {
+            _ = try? CBORDecoder().decode(NeedsResponse.self, from: [0xA0])
         }
-        #expect(throws: AWSClient.ClientError.missingCodingContext) {
-            try CBORDecoder().decode(NeedsResponse.self, from: [0xA0])
+    }
+    #endif
+
+    struct NeedsResponse: Decodable {
+        init(from decoder: any Decoder) throws {
+            _ = decoder.awsResponseContainer
         }
     }
 
@@ -179,29 +190,7 @@ struct AWSCodingContextTests {
         _ = try Self.summary(.restjson)
         #expect(AWSCodingContext.request == nil)
         #expect(AWSCodingContext.response == nil)
-        #expect(AWSCodingContext.serviceProtocol == nil)
-        #expect(AWSCodingContext.errorMap == nil)
         #expect(AWSCodingContext.event == nil)
-    }
-
-    @Test func userInfoIsUsedWhenThereIsNoScope() throws {
-        let container = RequestEncodingContainer(path: "/", hostPrefix: nil)
-        let encoder = JSONEncoder()
-        encoder.userInfo[.awsRequest] = container
-        _ = try encoder.encode(Nested(id: "1", headerValue: "from-user-info"))
-        #expect(container.headers[.init("x-nested")!] == "from-user-info")
-    }
-
-    @Test func scopeWinsOverUserInfo() throws {
-        let scoped = RequestEncodingContainer(path: "/", hostPrefix: nil)
-        let other = RequestEncodingContainer(path: "/", hostPrefix: nil)
-        let encoder = JSONEncoder()
-        encoder.userInfo[.awsRequest] = other
-        _ = try AWSCodingContext.$request.withValue(scoped) {
-            try encoder.encode(Nested(id: "1", headerValue: "scoped"))
-        }
-        #expect(scoped.headers[.init("x-nested")!] == "scoped")
-        #expect(other.headers[.init("x-nested")!] == nil)
     }
 
     // MARK: Concurrency
@@ -213,12 +202,15 @@ struct AWSCodingContextTests {
                 group.addTask {
                     // alternate between a JSON and a CBOR request
                     let serviceProtocol: ServiceProtocol = index % 2 == 0 ? .restjson : Self.cbor
-                    let config = createServiceConfig(region: .useast1, service: "test", serviceProtocol: serviceProtocol)
+                    let config = createServiceConfig(region: .useast1, amzTarget: "TestService", service: "test", serviceProtocol: serviceProtocol)
                     let request = try AWSHTTPRequest(
                         operation: "Op",
                         path: "/thing",
                         method: .post,
-                        input: Root(name: "n\(index)", nested: .init(id: "id\(index)", headerValue: "h\(index)")),
+                        input: Root(
+                            name: "n\(index)",
+                            nested: .init(id: "id\(index)", headerValue: "h\(index)", bindHeader: index % 2 == 0)
+                        ),
                         hostPrefix: "{id}.",
                         configuration: config
                     )

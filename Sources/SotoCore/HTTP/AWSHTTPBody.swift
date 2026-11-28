@@ -112,7 +112,7 @@ extension AWSHTTPBody: AsyncSequence {
 
 extension AWSHTTPBody: AWSDecodableShape {
     public init(from decoder: any Decoder) throws {
-        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+        let responseContainer = decoder.awsResponseContainer
         self = responseContainer.response.body
     }
 }
@@ -121,7 +121,6 @@ extension AWSHTTPBody: AWSEncodableShape {
     public func encode(to encoder: any Encoder) throws {
         enum CodingKeys: CodingKey {}
         _ = encoder.container(keyedBy: CodingKeys.self)
-        let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-        requestContainer.body = self
+        encoder.awsRequestContainer.body = self
     }
 }

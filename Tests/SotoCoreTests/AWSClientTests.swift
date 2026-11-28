@@ -413,7 +413,7 @@ class AWSClientTests {
             let test: String
 
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = decoder.awsResponseContainer
                 let container = try decoder.singleValueContainer()
                 self.payload = try container.decode(AWSHTTPBody.self)
                 self.test = try response.decodeHeader(String.self, key: "test")

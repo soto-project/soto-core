@@ -58,41 +58,43 @@ public struct AWSHTTPResponse: Sendable {
             payload = buffer
         }
 
-        switch serviceProtocol {
-        case .json, .restjson:
-            let payloadData: Data
-            if let payload, payload.readableBytes > 0 {
-                payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
-            } else {
-                payloadData = Data("{}".utf8)
-            }
-            let jsonDecoder = JSONDecoder()
-            jsonDecoder.dateDecodingStrategy = .secondsSince1970
-            jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-            return try jsonDecoder.decode(Output.self, from: payloadData)
-
-        case .restxml, .query, .ec2:
-            var xmlElement: XML.Element
-            if let buffer = payload,
-                let xmlDocument = try? XML.Document(buffer: buffer),
-                let rootElement = xmlDocument.rootElement()
-            {
-                xmlElement = rootElement
-                // if root element is called operation name + "Response" and its child is called
-                // operation name + "Result" then use the child as the root element when decoding
-                // XML
-                if let child = xmlElement.children(of: .element)?.first as? XML.Element,
-                    xmlElement.name == operation + "Response",
-                    child.name == operation + "Result"
-                {
-                    xmlElement = child
+        return try AWSCodingContext.$response.withValue(ResponseDecodingContainer(response: self, serviceProtocol: serviceProtocol)) {
+            switch serviceProtocol {
+            case .json, .restjson:
+                let payloadData: Data
+                if let payload, payload.readableBytes > 0 {
+                    payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
+                } else {
+                    payloadData = Data("{}".utf8)
                 }
-            } else {
-                xmlElement = .init(name: "__empty_element")
+                let jsonDecoder = JSONDecoder()
+                jsonDecoder.dateDecodingStrategy = .secondsSince1970
+                return try jsonDecoder.decode(Output.self, from: payloadData)
+
+            case .rpcv2Cbor:
+                return try RPCv2CBOR.decode(Output.self, from: payload)
+
+            case .restxml, .query, .ec2:
+                var xmlElement: XML.Element
+                if let buffer = payload,
+                    let xmlDocument = try? XML.Document(buffer: buffer),
+                    let rootElement = xmlDocument.rootElement()
+                {
+                    xmlElement = rootElement
+                    // if root element is called operation name + "Response" and its child is called
+                    // operation name + "Result" then use the child as the root element when decoding
+                    // XML
+                    if let child = xmlElement.children(of: .element)?.first as? XML.Element,
+                        xmlElement.name == operation + "Response",
+                        child.name == operation + "Result"
+                    {
+                        xmlElement = child
+                    }
+                } else {
+                    xmlElement = .init(name: "__empty_element")
+                }
+                return try XMLDecoder().decode(Output.self, from: xmlElement)
             }
-            var xmlDecoder = XMLDecoder()
-            xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-            return try xmlDecoder.decode(Output.self, from: xmlElement)
         }
     }
 
@@ -142,51 +144,41 @@ public struct AWSHTTPResponse: Sendable {
             return nil
 
         case .byteBuffer(let buffer):
-            switch serviceConfig.serviceProtocol {
-            case .restjson, .json:
-                let jsonDecoder = JSONDecoder()
-                jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
-                jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-                jsonDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try jsonDecoder.decode(AWSError.self, from: buffer)
+            return try AWSCodingContext.$response.withValue(
+                ResponseDecodingContainer(response: self, serviceProtocol: serviceConfig.serviceProtocol)
+            ) {
+                switch serviceConfig.serviceProtocol {
+                case .restjson, .json:
+                    return try JSONDecoder().decode(AWSError.self, from: buffer)
 
-            case .restxml:
-                let xmlDocument = try XML.Document(buffer: buffer)
-                guard var element = xmlDocument.rootElement() else { break }
-                if let error = element.elements(forName: "Error").first {
-                    element = error
+                case .rpcv2Cbor:
+                    return try RPCv2CBOR.decode(AWSError.self, from: buffer)
+
+                case .restxml:
+                    let xmlDocument = try XML.Document(buffer: buffer)
+                    guard var element = xmlDocument.rootElement() else { return nil }
+                    if let error = element.elements(forName: "Error").first {
+                        element = error
+                    }
+                    return try XMLDecoder().decode(AWSError.self, from: element)
+
+                case .query:
+                    let xmlDocument = try XML.Document(buffer: buffer)
+                    guard let element = xmlDocument.rootElement() else { return nil }
+                    guard let errorElement = element.elements(forName: "Error").first else { return nil }
+                    return try XMLDecoder().decode(AWSError.self, from: errorElement)
+
+                case .ec2:
+                    let xmlDocument = try XML.Document(buffer: buffer)
+                    guard var element = xmlDocument.rootElement() else { return nil }
+                    if let errors = element.elements(forName: "Errors").first {
+                        element = errors
+                    }
+                    guard let errorElement = element.elements(forName: "Error").first else { return nil }
+                    return try XMLDecoder().decode(AWSError.self, from: errorElement)
                 }
-                var xmlDecoder = XMLDecoder()
-                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
-                xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-                xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: element)
-
-            case .query:
-                let xmlDocument = try XML.Document(buffer: buffer)
-                guard let element = xmlDocument.rootElement() else { break }
-                guard let errorElement = element.elements(forName: "Error").first else { break }
-                var xmlDecoder = XMLDecoder()
-                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
-                xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-                xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: errorElement)
-
-            case .ec2:
-                let xmlDocument = try XML.Document(buffer: buffer)
-                guard var element = xmlDocument.rootElement() else { break }
-                if let errors = element.elements(forName: "Errors").first {
-                    element = errors
-                }
-                guard let errorElement = element.elements(forName: "Error").first else { break }
-                var xmlDecoder = XMLDecoder()
-                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
-                xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-                xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: errorElement)
             }
         }
-        return nil
     }
 }
 
@@ -195,9 +187,4 @@ extension XML.Document {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
     }
-}
-
-extension CodingUserInfoKey {
-    public static var awsErrorMap: Self { .init(rawValue: "soto.awsErrorMap")! }
-    public static var awsProtocol: Self { .init(rawValue: "soto.awsProtocol")! }
 }

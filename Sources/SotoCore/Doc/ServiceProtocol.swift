@@ -20,6 +20,9 @@ public enum ServiceProtocol {
     case restxml
     case query
     case ec2
+    /// Smithy RPC v2 with CBOR payloads. The request path holds the Smithy service shape name, which is
+    /// the `amzTarget` of the service configuration.
+    case rpcv2Cbor
 }
 
 extension ServiceProtocol {
@@ -33,6 +36,8 @@ extension ServiceProtocol {
             return "application/octet-stream"
         case .query, .ec2:
             return "application/x-www-form-urlencoded; charset=utf-8"
+        case .rpcv2Cbor:
+            return "application/cbor"
         }
     }
 }

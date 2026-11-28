@@ -72,25 +72,11 @@ public struct AWSResponseError: AWSErrorType {
 extension AWSResponseError: Decodable {
     @inlinable
     public init(from decoder: any Decoder) throws {
-        guard let responseContainer = decoder.userInfo[.awsResponse] as? ResponseDecodingContainer else {
-            throw DecodingError.valueNotFound(
-                AWSResponseError.self,
-                .init(
-                    codingPath: decoder.codingPath,
-                    debugDescription: "Decoding an AWSResponseError requires a userInfo for the ResponseDecodingContainer"
-                )
-            )
-        }
-        guard let serviceProtocol = decoder.userInfo[.awsProtocol] as? ServiceProtocol else {
-            throw DecodingError.valueNotFound(
-                AWSResponseError.self,
-                .init(codingPath: decoder.codingPath, debugDescription: "Decoding an AWSResponseError requires a userInfo for the ServiceProtocol")
-            )
-        }
+        let response = decoder.awsResponseContainer
+        let serviceProtocol = response.serviceProtocol
         let container = try decoder.container(keyedBy: CodingKeys.self)
         switch serviceProtocol {
         case .restjson, .json:
-            let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
             let code =
                 try response.decodeHeaderIfPresent(key: HTTPField.Name.xAmznErrorType.canonicalName)
                 ?? container.decodeIfPresent(String.self, forKey: .type)
@@ -98,11 +84,17 @@ extension AWSResponseError: Decodable {
             let errorCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
             self.errorCode = .init(errorCode)
 
+        case .rpcv2Cbor:
+            // the error type is only read from the body, X-Amzn-ErrorType is ignored
+            let code = try container.decode(String.self, forKey: .type)
+            let errorCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
+            self.errorCode = .init(errorCode)
+
         case .restxml, .query, .ec2:
             self.errorCode = try container.decode(String.self, forKey: .Code)
         }
         self.message = try container.decodeIfPresent(String.self, forKey: .Message) ?? container.decodeIfPresent(String.self, forKey: .message)
-        self.response = responseContainer.response.response
+        self.response = response.response.response
     }
 
     @usableFromInline

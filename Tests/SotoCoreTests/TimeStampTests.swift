@@ -123,7 +123,7 @@ class TimeStampTests {
             struct A: AWSDecodableShape {
                 let date: Date
                 public init(from decoder: any Decoder) throws {
-                    let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                    let response = try decoder.requireAWSResponseContainer()
                     self.date = try response.decodeHeader(Date.self, key: "Date")
                 }
             }

@@ -72,25 +72,24 @@ public struct AWSResponseError: AWSErrorType {
 extension AWSResponseError: Decodable {
     @inlinable
     public init(from decoder: any Decoder) throws {
-        guard let responseContainer = decoder.userInfo[.awsResponse] as? ResponseDecodingContainer else {
+        guard let response = decoder.awsResponseContainer else {
             throw DecodingError.valueNotFound(
                 AWSResponseError.self,
                 .init(
                     codingPath: decoder.codingPath,
-                    debugDescription: "Decoding an AWSResponseError requires a userInfo for the ResponseDecodingContainer"
+                    debugDescription: "Decoding an AWSResponseError requires an AWSCodingContext response"
                 )
             )
         }
-        guard let serviceProtocol = decoder.userInfo[.awsProtocol] as? ServiceProtocol else {
+        guard let serviceProtocol = decoder.awsServiceProtocol else {
             throw DecodingError.valueNotFound(
                 AWSResponseError.self,
-                .init(codingPath: decoder.codingPath, debugDescription: "Decoding an AWSResponseError requires a userInfo for the ServiceProtocol")
+                .init(codingPath: decoder.codingPath, debugDescription: "Decoding an AWSResponseError requires an AWSCodingContext serviceProtocol")
             )
         }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         switch serviceProtocol {
         case .restjson, .json:
-            let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
             let code =
                 try response.decodeHeaderIfPresent(key: HTTPField.Name.xAmznErrorType.canonicalName)
                 ?? container.decodeIfPresent(String.self, forKey: .type)
@@ -108,7 +107,7 @@ extension AWSResponseError: Decodable {
             self.errorCode = try container.decode(String.self, forKey: .Code)
         }
         self.message = try container.decodeIfPresent(String.self, forKey: .Message) ?? container.decodeIfPresent(String.self, forKey: .message)
-        self.response = responseContainer.response.response
+        self.response = response.response.response
     }
 
     @usableFromInline

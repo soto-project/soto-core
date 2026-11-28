@@ -66,7 +66,7 @@ class AWSRequestTests {
 
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.repeat, key: "repeat")
             }
 
@@ -87,7 +87,7 @@ class AWSRequestTests {
 
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeQuery(self.throw, key: "throw")
             }
 
@@ -235,7 +235,7 @@ class AWSRequestTests {
             let h: String
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.h, key: "header-member")
             }
 
@@ -256,7 +256,7 @@ class AWSRequestTests {
 
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.httpDate, key: "date")
                 requestContainer.encodeHeader(self._iso8601Date, key: "iso8601-date")
             }
@@ -279,7 +279,7 @@ class AWSRequestTests {
             let content: [String: String]
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")
             }
 
@@ -298,7 +298,7 @@ class AWSRequestTests {
             let u: String
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodePath(self.u, key: "key")
             }
 
@@ -321,7 +321,7 @@ class AWSRequestTests {
                 let r: String?
                 func encode(to encoder: any Encoder) throws {
                     _ = encoder.container(keyedBy: CodingKeys.self)
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeQuery(self.p, key: "puery")
                     requestContainer.encodeQuery(self.q, key: "query")
                     requestContainer.encodeQuery(self.r, key: "ruery")
@@ -343,7 +343,7 @@ class AWSRequestTests {
                 let q: [String]?
                 func encode(to encoder: any Encoder) throws {
                     _ = encoder.container(keyedBy: CodingKeys.self)
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeQuery(self.q, key: "query")
                 }
 
@@ -364,7 +364,7 @@ class AWSRequestTests {
                 let q: [String: Int]?
                 func encode(to encoder: any Encoder) throws {
                     _ = encoder.container(keyedBy: CodingKeys.self)
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeQuery(self.q)
                 }
 
@@ -384,7 +384,7 @@ class AWSRequestTests {
                 let d: Date?
                 func encode(to encoder: any Encoder) throws {
                     _ = encoder.container(keyedBy: CodingKeys.self)
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeQuery(self.d, key: "d")
                 }
 
@@ -404,7 +404,7 @@ class AWSRequestTests {
                 let q: String
                 func encode(to encoder: any Encoder) throws {
                     _ = encoder.container(keyedBy: CodingKeys.self)
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeQuery(self.q, key: "query")
                 }
 
@@ -582,7 +582,7 @@ class AWSRequestTests {
                 let contentType: String
 
                 func encode(to encoder: any Encoder) throws {
-                    let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                    let requestContainer = try encoder.requireAWSRequestContainer()
                     requestContainer.encodeHeader(self.contentType, key: "content-type")
                     try self.payload.encode(to: encoder)
                 }
@@ -622,7 +622,7 @@ class AWSRequestTests {
             let path: String
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodePath(self.path, key: "path")
             }
 
@@ -646,7 +646,7 @@ class AWSRequestTests {
             let items: [String]
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeQuery(self.items, key: "item")
             }
 
@@ -667,7 +667,7 @@ class AWSRequestTests {
             var values: [Int]
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeQuery(self._date, key: "date")
                 requestContainer.encodeQuery(self._values, key: "values")
             }
@@ -717,7 +717,7 @@ class AWSRequestTests {
             let accountId: String
             func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHostPrefix(self.accountId, key: "AccountId")
             }
 
@@ -806,7 +806,7 @@ class AWSRequestTests {
             let q: [String: Int]
             func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.checksum, key: "Content-MD5")
                 try container.encode(self.q, forKey: .q)
             }
@@ -829,7 +829,7 @@ class AWSRequestTests {
             let checksum: String
             func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
                 try container.encode(self.q, forKey: .q)
             }
@@ -852,7 +852,7 @@ class AWSRequestTests {
             let checksum: String
             func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
                 try container.encode(self.q, forKey: .q)
             }
@@ -875,7 +875,7 @@ class AWSRequestTests {
             let checksum: String
             func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
                 try container.encode(self.q, forKey: .q)
             }
@@ -898,7 +898,7 @@ class AWSRequestTests {
             let checksum: String
             func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                let requestContainer = try encoder.requireAWSRequestContainer()
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
                 try container.encode(self.q, forKey: .q)
             }

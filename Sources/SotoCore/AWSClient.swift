@@ -171,6 +171,8 @@ public final class AWSClient: Sendable {
         case invalidARN(String)
         /// The service protocol cannot send a raw or streaming payload
         case unsupportedPayload
+        /// A shape was coded outside of a request or response, so there is no request or response container
+        case missingCodingContext
     }
 
     /// Additional options
@@ -549,6 +551,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "ARN (\(arn)) provided to the client was invalid"
         case .unsupportedPayload:
             return "The request has a raw or streaming payload, which the RPC v2 CBOR protocol does not support"
+        case .missingCodingContext:
+            return "The shape was encoded or decoded outside of a request or response, so there is no AWSCodingContext"
         }
     }
 }

@@ -153,7 +153,9 @@ extension AWSHTTPRequest {
             let encoder = JSONEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.dateEncodingStrategy = .secondsSince1970
-            let buffer = try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
+            let buffer = try AWSCodingContext.$request.withValue(requestEncoderContainer) {
+                try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
+            }
             // GET, HEAD and DELETE methods should have an empty body
             if method == .get || method == .head || method == .delete, buffer == ByteBuffer(string: "{}") {
                 body = .init()
@@ -176,7 +178,9 @@ extension AWSHTTPRequest {
         case .restxml:
             var encoder = XMLEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
-            let xml = try encoder.encode(input, name: Input._xmlRootNodeName)
+            let xml = try AWSCodingContext.$request.withValue(requestEncoderContainer) {
+                try encoder.encode(input, name: Input._xmlRootNodeName)
+            }
             if let xml, xml.childCount > 0 {
                 if let xmlNamespace = Input._xmlNamespace ?? configuration.xmlNamespace {
                     xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
@@ -192,7 +196,7 @@ extension AWSHTTPRequest {
             var encoder = QueryEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
-            if let query = try encoder.encode(input) {
+            if let query = try AWSCodingContext.$request.withValue(requestEncoderContainer, operation: { try encoder.encode(input) }) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
@@ -203,7 +207,7 @@ extension AWSHTTPRequest {
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
             encoder.ec2 = true
-            if let query = try encoder.encode(input) {
+            if let query = try AWSCodingContext.$request.withValue(requestEncoderContainer, operation: { try encoder.encode(input) }) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()

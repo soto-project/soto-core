@@ -46,7 +46,7 @@ struct RPCv2CBORProtocolTests {
         }
 
         func encode(to encoder: any Encoder) throws {
-            let request = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+            let request = try encoder.requireAWSRequestContainer()
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.name, forKey: .name)
             try container.encode(self.headerMember, forKey: .headerMember)
@@ -65,7 +65,7 @@ struct RPCv2CBORProtocolTests {
         }
 
         func encode(to encoder: any Encoder) throws {
-            let request = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+            let request = try encoder.requireAWSRequestContainer()
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.accountId, forKey: .accountId)
             request.encodeHostPrefix(self.accountId, key: "accountId")

@@ -69,10 +69,12 @@ public struct AWSHTTPResponse: Sendable {
             let jsonDecoder = JSONDecoder()
             jsonDecoder.dateDecodingStrategy = .secondsSince1970
             jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-            return try jsonDecoder.decode(Output.self, from: payloadData)
+            return try AWSCodingContext.$response.withValue(ResponseDecodingContainer(response: self)) {
+                try jsonDecoder.decode(Output.self, from: payloadData)
+            }
 
         case .rpcv2Cbor:
-            return try RPCv2CBOR.decode(Output.self, from: payload, context: .init(response: ResponseDecodingContainer(response: self)))
+            return try RPCv2CBOR.decode(Output.self, from: payload, response: ResponseDecodingContainer(response: self))
 
         case .restxml, .query, .ec2:
             var xmlElement: XML.Element
@@ -95,7 +97,9 @@ public struct AWSHTTPResponse: Sendable {
             }
             var xmlDecoder = XMLDecoder()
             xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-            return try xmlDecoder.decode(Output.self, from: xmlElement)
+            return try AWSCodingContext.$response.withValue(ResponseDecodingContainer(response: self)) {
+                try xmlDecoder.decode(Output.self, from: xmlElement)
+            }
         }
     }
 
@@ -151,17 +155,15 @@ public struct AWSHTTPResponse: Sendable {
                 jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 jsonDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try jsonDecoder.decode(AWSError.self, from: buffer)
+                return try self.withErrorContext(serviceConfig) { try jsonDecoder.decode(AWSError.self, from: buffer) }
 
             case .rpcv2Cbor:
                 return try RPCv2CBOR.decode(
                     AWSError.self,
                     from: buffer,
-                    context: .init(
-                        response: ResponseDecodingContainer(response: self),
-                        serviceProtocol: serviceConfig.serviceProtocol,
-                        errorMap: serviceConfig.errorType
-                    )
+                    response: ResponseDecodingContainer(response: self),
+                    serviceProtocol: serviceConfig.serviceProtocol,
+                    errorMap: serviceConfig.errorType
                 )
 
             case .restxml:
@@ -174,7 +176,7 @@ public struct AWSHTTPResponse: Sendable {
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: element)
+                return try self.withErrorContext(serviceConfig) { try xmlDecoder.decode(AWSError.self, from: element) }
 
             case .query:
                 let xmlDocument = try XML.Document(buffer: buffer)
@@ -184,7 +186,7 @@ public struct AWSHTTPResponse: Sendable {
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: errorElement)
+                return try self.withErrorContext(serviceConfig) { try xmlDecoder.decode(AWSError.self, from: errorElement) }
 
             case .ec2:
                 let xmlDocument = try XML.Document(buffer: buffer)
@@ -197,10 +199,21 @@ public struct AWSHTTPResponse: Sendable {
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try xmlDecoder.decode(AWSError.self, from: errorElement)
+                return try self.withErrorContext(serviceConfig) { try xmlDecoder.decode(AWSError.self, from: errorElement) }
             }
         }
         return nil
+    }
+}
+
+extension AWSHTTPResponse {
+    /// Run `decode` with the context an error shape reads while it is decoded
+    fileprivate func withErrorContext<Result>(_ serviceConfig: AWSServiceConfig, _ decode: () throws -> Result) rethrows -> Result {
+        try AWSCodingContext.$response.withValue(ResponseDecodingContainer(response: self)) {
+            try AWSCodingContext.$serviceProtocol.withValue(serviceConfig.serviceProtocol) {
+                try AWSCodingContext.$errorMap.withValue(serviceConfig.errorType, operation: decode)
+            }
+        }
     }
 }
 

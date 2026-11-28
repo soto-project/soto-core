@@ -98,7 +98,9 @@ private struct _EventStreamDecoder: Decoder {
                 let jsonDecoder = JSONDecoder()
                 jsonDecoder.dateDecodingStrategy = .secondsSince1970
                 jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try jsonDecoder.decode(T.self, from: self.payload)
+                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
+                    try jsonDecoder.decode(T.self, from: self.payload)
+                }
 
             case "text/xml", "application/xml":
                 let xmlDocument = try XML.Document(buffer: self.payload)
@@ -106,7 +108,9 @@ private struct _EventStreamDecoder: Decoder {
 
                 var xmlDecoder = XMLDecoder()
                 xmlDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try xmlDecoder.decode(T.self, from: xmlElement)
+                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
+                    try xmlDecoder.decode(T.self, from: xmlElement)
+                }
 
             case "application/octet-stream":
                 // if content-type is a raw buffer then use JSONDecoder() to pass this to `init(from:)`
@@ -114,7 +118,9 @@ private struct _EventStreamDecoder: Decoder {
                 let jsonDecoder = JSONDecoder()
                 jsonDecoder.dateDecodingStrategy = .secondsSince1970
                 jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
-                return try jsonDecoder.decode(T.self, from: .init(staticString: "{}"))
+                return try AWSCodingContext.$event.withValue(EventDecodingContainer(headers: self.headers, payload: self.payload)) {
+                    try jsonDecoder.decode(T.self, from: .init(staticString: "{}"))
+                }
 
             case .none:
                 // if there is no content-type then create object using JSONDecoder() and some empty json

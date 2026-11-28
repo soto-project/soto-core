@@ -32,7 +32,7 @@ public struct AWSEventStream<Event: Sendable>: Sendable {
 
 extension AWSEventStream: Decodable where Event: Decodable {
     public init(from decoder: any Decoder) throws {
-        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+        let responseContainer = try decoder.requireAWSResponseContainer()
         self.init(responseContainer.response.body)
     }
 }

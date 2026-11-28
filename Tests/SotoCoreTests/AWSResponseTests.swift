@@ -27,7 +27,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let h: String
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.h = try response.decodeHeader(String.self, key: "header-member")
             }
         }
@@ -55,7 +55,7 @@ class AWSResponseTests {
             let bool: Bool
 
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.string = try response.decodeHeader(String.self, key: "string")
                 self.string2 = try response.decodeHeader(String.self, key: "string2")
                 self.double = try response.decodeHeader(Double.self, key: "double")
@@ -95,7 +95,7 @@ class AWSResponseTests {
             let test: TestEnum
 
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.test = try response.decodeHeader(TestEnum.self, key: "testEnum")
             }
         }
@@ -117,7 +117,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let status: Int
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.status = response.decodeStatus()
             }
         }
@@ -157,7 +157,7 @@ class AWSResponseTests {
             let contentType: String
 
             init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.contentType = try response.decodeHeader(String.self, key: "content-type")
                 self.name = try .init(from: decoder)
             }
@@ -416,7 +416,7 @@ class AWSResponseTests {
             let content: [String: String]?
 
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
             }
         }
@@ -435,7 +435,7 @@ class AWSResponseTests {
             let body: String
 
             public init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let response = try decoder.requireAWSResponseContainer()
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
                 self.body = try container.decode(String.self, forKey: .body)
@@ -503,7 +503,7 @@ class AWSResponseTests {
             let test2: String?
 
             init(from decoder: any Decoder) throws {
-                let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
+                let response = try decoder.requireAWSEventContainer()
                 self.test = try response.decodeHeader(key: "test")
                 self.test2 = try response.decodeHeaderIfPresent(key: "test2")
             }

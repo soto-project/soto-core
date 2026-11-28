@@ -112,7 +112,7 @@ extension AWSHTTPBody: AsyncSequence {
 
 extension AWSHTTPBody: AWSDecodableShape {
     public init(from decoder: any Decoder) throws {
-        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+        let responseContainer = try decoder.requireAWSResponseContainer()
         self = responseContainer.response.body
     }
 }
@@ -121,7 +121,7 @@ extension AWSHTTPBody: AWSEncodableShape {
     public func encode(to encoder: any Encoder) throws {
         enum CodingKeys: CodingKey {}
         _ = encoder.container(keyedBy: CodingKeys.self)
-        guard let requestContainer = encoder.userInfo[.awsRequest] as? RequestEncodingContainer else {
+        guard let requestContainer = encoder.awsRequestContainer else {
             throw AWSClient.ClientError.unsupportedPayload
         }
         requestContainer.body = self
